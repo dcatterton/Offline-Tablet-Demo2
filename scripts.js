@@ -12,7 +12,7 @@
   
   }());
 
-// Wait for the DOM to be fully loaded
+// Wai for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Target the buttons using more specific selectors
     const scrollUpButton = document.querySelector('.scrollUp forge-button-area button');
