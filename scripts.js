@@ -416,349 +416,216 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30 * 60 * 1000);
   });
 
-  // Enhanced PWA Installation Prompt
-// Add this to your scripts.js file
+  // Fixed PWA Installation Prompt
+// Replace the previous installation code with this version
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Track installation state
-  let deferredPrompt;
-  let installPromptShown = false;
+  // Store the installation event for later use
+  let deferredPrompt = null;
+  let installButtonAdded = false;
   
-  // Create the install promotion banner
-  const createInstallBanner = () => {
-    const banner = document.createElement('forge-card');
-    banner.className = 'pwa-install-banner';
-    banner.style.display = 'none';
-    banner.style.position = 'fixed';
-    banner.style.bottom = '0';
-    banner.style.left = '0';
-    banner.style.right = '0';
-    banner.style.padding = '12px';
-    banner.style.backgroundColor = '#2196F3';
-    banner.style.color = 'white';
-    banner.style.zIndex = '9999';
-    banner.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.2)';
+  // Create an installation button directly in the header
+  function createInstallButton() {
+    if (installButtonAdded) return;
     
-    banner.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center;">
-          <forge-icon external external-type="standard" slot="start" role="img" name="get_app" 
-            aria-label="Install app icon" style="margin-right: 12px; color: white;"></forge-icon>
-          <div>
-            <p class="forge-typography--heading3" style="margin: 0; color: white;">Install Tyler Inmate System</p>
-            <p class="forge-typography--body1" style="margin: 0; color: white;">Add this app to your home screen for easy access</p>
-          </div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <forge-button>
-            <button slot="button" class="pwa-install-later">Later</button>
-          </forge-button>
-          <forge-button variant="unelevated">
-            <button slot="button" class="pwa-install-now">Install Now</button>
-          </forge-button>
-        </div>
-      </div>
+    const headerElement = document.querySelector('.logoHeader');
+    if (!headerElement) return;
+    
+    const installButton = document.createElement('forge-button');
+    installButton.setAttribute('variant', 'unelevated');
+    installButton.style.marginLeft = 'auto';
+    installButton.style.marginRight = '12px';
+    installButton.innerHTML = `
+      <button slot="button" id="pwaInstallButton">
+        <span style="display: flex; align-items: center;">
+          <forge-icon external external-type="standard" name="get_app" 
+            style="margin-right: 8px;"></forge-icon>
+          Install App
+        </span>
+      </button>
     `;
     
-    document.body.appendChild(banner);
-    return banner;
-  };
-  
-  // Create floating install button (appears in bottom right corner)
-  const createFloatingInstallButton = () => {
-    const button = document.createElement('div');
-    button.className = 'pwa-floating-install-button';
-    button.style.position = 'fixed';
-    button.style.bottom = '20px';
-    button.style.right = '20px';
-    button.style.backgroundColor = '#2196F3';
-    button.style.color = 'white';
-    button.style.width = '56px';
-    button.style.height = '56px';
-    button.style.borderRadius = '50%';
-    button.style.display = 'flex';
-    button.style.alignItems = 'center';
-    button.style.justifyContent = 'center';
-    button.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.2)';
-    button.style.cursor = 'pointer';
-    button.style.zIndex = '999';
-    button.style.display = 'none';
+    headerElement.appendChild(installButton);
+    installButtonAdded = true;
     
-    button.innerHTML = `
-      <forge-icon external external-type="standard" role="img" name="get_app" 
-        aria-label="Install app icon" style="color: white;"></forge-icon>
-    `;
-    
-    document.body.appendChild(button);
-    return button;
-  };
-  
-  // Create elements for installation
-  const installBanner = createInstallBanner();
-  const floatingButton = createFloatingInstallButton();
-  
-  // Create menu option for installation
-  const addInstallMenuItem = () => {
-    const menuElement = document.querySelector('.leftMenu');
-    
-    if (menuElement) {
-      const installOption = document.createElement('forge-card');
-      installOption.className = 'menuCard';
-      installOption.style.marginTop = '16px';
-      installOption.innerHTML = `
-        <forge-button-area>
-          <button slot="button" class="pwa-menu-install-button" aria-labelledby="button-heading"></button>
-          <div style="padding: 12px; display: flex; align-items: center;">
-            <forge-icon external external-type="standard" slot="start" role="img" name="get_app" 
-              aria-label="Install app icon" style="margin-right: 12px;"></forge-icon>
-            <p class="forge-typography--heading3" style="margin: 0;">Install this app</p>
-          </div>
-        </forge-button-area>
-      `;
-      
-      menuElement.appendChild(installOption);
-      
-      const menuInstallButton = installOption.querySelector('.pwa-menu-install-button');
-      menuInstallButton.addEventListener('click', () => {
-        if (deferredPrompt) {
-          showInstallPrompt();
-        } else {
-          showManualInstallInstructions();
-        }
-      });
-      
-      // Hide initially if the app is already installed
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        installOption.style.display = 'none';
-      }
-    }
-  };
-  
-  // Add installation menu item
-  addInstallMenuItem();
-  
-  // Function to show installation prompt
-  const showInstallPrompt = () => {
-    if (!deferredPrompt) {
-      console.log('No installation prompt available');
-      return;
-    }
-    
-    // Show the install prompt
-    deferredPrompt.prompt();
-    installPromptShown = true;
-    
-    // Hide the banner and button
-    installBanner.style.display = 'none';
-    floatingButton.style.display = 'none';
-    
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then(choiceResult => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+    // Add click event listener
+    document.getElementById('pwaInstallButton').addEventListener('click', function() {
+      console.log('Install button clicked');
+      if (deferredPrompt) {
+        // Show the installation prompt
+        console.log('Showing installation prompt');
+        deferredPrompt.prompt();
         
-        // Show a success message
-        const toast = document.createElement('div');
-        toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.left = '50%';
-        toast.style.transform = 'translateX(-50%)';
-        toast.style.backgroundColor = '#4CAF50';
-        toast.style.color = 'white';
-        toast.style.padding = '10px 20px';
-        toast.style.borderRadius = '4px';
-        toast.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-        toast.style.zIndex = '9999';
-        toast.textContent = 'App installation started!';
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-          toast.remove();
-        }, 3000);
-        
+        // Wait for the user's choice
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the installation');
+            showToast('Installation started!');
+          } else {
+            console.log('User declined the installation');
+            showToast('Installation canceled');
+          }
+          // Reset the deferred prompt variable
+          deferredPrompt = null;
+        });
       } else {
-        console.log('User dismissed the install prompt');
-        
-        // Show the floating button again after a delay
-        setTimeout(() => {
-          floatingButton.style.display = 'flex';
-        }, 300000); // Show again after 5 minutes
+        console.log('No installation prompt available');
+        showManualInstallInstructions();
       }
-      
-      // Reset the deferred prompt variable
-      deferredPrompt = null;
     });
-  };
+  }
   
-  // Function to show manual installation instructions
-  const showManualInstallInstructions = () => {
+  // Show a toast message
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.backgroundColor = '#4CAF50';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '4px';
+    toast.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(function() {
+      toast.remove();
+    }, 3000);
+  }
+  
+  // Show manual installation instructions
+  function showManualInstallInstructions() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
     
-    let instructions = '';
-    
+    let instructionText = '';
     if (isIOS) {
-      instructions = `
-        <p>To install this app on iOS:</p>
+      instructionText = `
+        <p>To install this app on your iOS device:</p>
         <ol>
-          <li>Tap the Share button <forge-icon external external-type="standard" name="share"></forge-icon> in Safari</li>
+          <li>Tap the Share button at the bottom of your screen</li>
           <li>Scroll down and tap "Add to Home Screen"</li>
-          <li>Tap "Add" in the upper right corner</li>
+          <li>Tap "Add" in the top right corner</li>
         </ol>
       `;
     } else if (isAndroid) {
-      instructions = `
-        <p>To install this app on Android:</p>
+      instructionText = `
+        <p>To install this app on your Android device:</p>
         <ol>
-          <li>Tap the menu button <forge-icon external external-type="standard" name="more_vert"></forge-icon> in Chrome</li>
-          <li>Tap "Add to Home screen"</li>
+          <li>Tap the menu icon (three dots) in the top right</li>
+          <li>Tap "Install app" or "Add to Home screen"</li>
           <li>Follow the on-screen instructions</li>
         </ol>
       `;
     } else {
-      instructions = `
-        <p>To install this app:</p>
+      instructionText = `
+        <p>To install this app on your device:</p>
         <ol>
-          <li>Open this website in Chrome, Edge, or Firefox</li>
-          <li>Click the install icon <forge-icon external external-type="standard" name="get_app"></forge-icon> in the address bar</li>
+          <li>Look for the install icon in your browser's address bar</li>
+          <li>Click the install button when prompted</li>
           <li>Follow the on-screen instructions</li>
         </ol>
       `;
     }
     
-    // Create modal dialog
+    // Create a simple modal with instructions
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
     modal.style.top = '0';
     modal.style.left = '0';
-    modal.style.right = '0';
-    modal.style.bottom = '0';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
     modal.style.zIndex = '10000';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
     
     modal.innerHTML = `
-      <forge-card style="max-width: 400px; width: 90%;">
-        <div style="padding: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <p class="forge-typography--heading2" style="margin: 0;">Install this app</p>
-            <forge-icon external external-type="standard" name="close" class="close-modal" 
-              style="cursor: pointer;"></forge-icon>
-          </div>
-          <div>${instructions}</div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
-            <forge-button variant="unelevated">
-              <button slot="button" class="close-modal">Got it</button>
-            </forge-button>
-          </div>
-        </div>
-      </forge-card>
+      <div style="background: white; padding: 20px; max-width: 80%; border-radius: 8px; position: relative;">
+        <h3>Install This Application</h3>
+        ${instructionText}
+        <button id="closeInstructionsBtn" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer;">✕</button>
+      </div>
     `;
     
     document.body.appendChild(modal);
     
-    // Add close functionality
-    const closeButtons = modal.querySelectorAll('.close-modal');
-    closeButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        modal.remove();
-      });
+    document.getElementById('closeInstructionsBtn').addEventListener('click', function() {
+      modal.remove();
     });
-  };
+  }
   
-  // Listen for before install prompt event
-  window.addEventListener('beforeinstallprompt', (e) => {
+  // Listen for the beforeinstallprompt event
+  window.addEventListener('beforeinstallprompt', function(e) {
+    console.log('beforeinstallprompt event fired');
+    
     // Prevent the mini-infobar from appearing on mobile
     e.preventDefault();
     
-    // Stash the event so it can be triggered later
+    // Store the event for later use
     deferredPrompt = e;
     
-    // Only show installation prompt if user has been on the site for a while
-    // or has visited multiple pages
-    setTimeout(() => {
-      if (!installPromptShown) {
-        // Show the install banner
-        installBanner.style.display = 'block';
-        
-        // Add event listeners for the banner buttons
-        const installNowButton = document.querySelector('.pwa-install-now');
-        const installLaterButton = document.querySelector('.pwa-install-later');
-        
-        if (installNowButton) {
-          installNowButton.addEventListener('click', showInstallPrompt);
-        }
-        
-        if (installLaterButton) {
-          installLaterButton.addEventListener('click', () => {
-            installBanner.style.display = 'none';
-            // Show the floating button instead
-            floatingButton.style.display = 'flex';
-          });
-        }
-      }
-    }, 30000); // Wait 30 seconds before showing
+    // Create the install button if it doesn't exist
+    createInstallButton();
   });
   
-  // Add click event to the floating button
-  floatingButton.addEventListener('click', () => {
-    if (deferredPrompt) {
-      showInstallPrompt();
-    } else {
-      showManualInstallInstructions();
-    }
-  });
-  
-  // Check if app is already installed
+  // Check if the app is already installed
   if (window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator.standalone === true)) {
+      window.navigator.standalone === true) {
     console.log('App is already installed');
-    // Hide install elements if already installed
-    installBanner.style.display = 'none';
-    floatingButton.style.display = 'none';
+  } else {
+    console.log('App is not installed');
+    
+    // If on iOS Safari, which doesn't support beforeinstallprompt
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
+      createInstallButton(); // Create button that will show manual instructions
+    }
   }
   
-  // Add a special initialization for iOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS && !window.navigator.standalone) {
-    // iOS doesn't support beforeinstallprompt, so we'll show a hint after a delay
-    setTimeout(() => {
-      if (!document.cookie.includes('ios-install-hint-shown')) {
-        const iosHint = document.createElement('forge-card');
-        iosHint.className = 'ios-install-hint';
-        iosHint.style.position = 'fixed';
-        iosHint.style.bottom = '0';
-        iosHint.style.left = '0';
-        iosHint.style.right = '0';
-        iosHint.style.backgroundColor = '#2196F3';
-        iosHint.style.color = 'white';
-        iosHint.style.padding = '12px';
-        iosHint.style.zIndex = '9999';
+  // Alternative basic approach - add a direct button that calls prompt()
+  // This is a more direct approach that might work better in some cases
+  setTimeout(function() {
+    if (!document.getElementById('pwaInstallButton') && !installButtonAdded) {
+      const headerElement = document.querySelector('.logoHeader');
+      if (headerElement) {
+        const directInstallButton = document.createElement('button');
+        directInstallButton.id = 'directInstallButton';
+        directInstallButton.textContent = 'Install App';
+        directInstallButton.style.marginLeft = 'auto';
+        directInstallButton.style.marginRight = '12px';
+        directInstallButton.style.padding = '8px 16px';
+        directInstallButton.style.backgroundColor = '#2196F3';
+        directInstallButton.style.color = 'white';
+        directInstallButton.style.border = 'none';
+        directInstallButton.style.borderRadius = '4px';
+        directInstallButton.style.cursor = 'pointer';
         
-        iosHint.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div>
-              <p class="forge-typography--heading3" style="margin: 0; color: white;">Install this app on your iPhone</p>
-              <p class="forge-typography--body1" style="margin: 0; color: white;">Tap <forge-icon external external-type="standard" name="share"></forge-icon> then "Add to Home Screen"</p>
-            </div>
-            <forge-button>
-              <button slot="button" class="ios-hint-close">Got it</button>
-            </forge-button>
-          </div>
-        `;
+        headerElement.appendChild(directInstallButton);
         
-        document.body.appendChild(iosHint);
-        
-        const closeButton = iosHint.querySelector('.ios-hint-close');
-        closeButton.addEventListener('click', () => {
-          iosHint.remove();
-          // Set a cookie to remember that we've shown the hint
-          document.cookie = 'ios-install-hint-shown=true; max-age=604800'; // 1 week
+        directInstallButton.addEventListener('click', function() {
+          console.log('Direct install button clicked');
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choiceResult) {
+              console.log('User choice:', choiceResult.outcome);
+              deferredPrompt = null;
+            });
+          } else {
+            showManualInstallInstructions();
+          }
         });
       }
-    }, 60000); // Show after 1 minute
-  }
+    }
+  }, 2000);
+  
+  // Debug logging to help understand installation state
+  console.log('PWA install conditions:');
+  console.log('- navigator.serviceWorker enabled:', 'serviceWorker' in navigator);
+  console.log('- window.matchMedia standalone:', window.matchMedia('(display-mode: standalone)').matches);
+  console.log('- navigator.standalone (iOS):', window.navigator.standalone);
 });
