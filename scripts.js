@@ -358,9 +358,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
       // Create a loading spinner that appears during service worker operations
-      const spinner = document.createElement('div');
-      spinner.className = 'loading-spinner';
-      document.body.appendChild(spinner);
+    //   const spinner = document.createElement('div');
+    //   spinner.className = 'loading-spinner';
+    //   document.body.appendChild(spinner);
     }
     
     // Check if content fails to load and offer refresh
