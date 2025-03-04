@@ -238,3 +238,180 @@ if ('serviceWorker' in navigator) {
         });
     });
   }
+
+  // Add this to your scripts.js file
+
+// Offline handling and PWA enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Network status monitoring
+    function updateOnlineStatus() {
+      const status = navigator.onLine ? 'online' : 'offline';
+      console.log('Network status changed to:', status);
+      
+      if (navigator.onLine) {
+        document.body.classList.remove('is-offline');
+        // Show a quick toast or notification that we're back online
+        showToast('You are back online!', 'success');
+      } else {
+        document.body.classList.add('is-offline');
+        // Show an offline notification
+        showToast('You are offline. Some features may be limited.', 'warning');
+      }
+    }
+  
+    // Initial check
+    updateOnlineStatus();
+    
+    // Add event listeners for network status changes
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    // Simple toast notification system
+    function showToast(message, type = 'info') {
+      // Check if we already have a toast container
+      let toastContainer = document.querySelector('.toast-container');
+      
+      if (!toastContainer) {
+        // Create a container for toast messages
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+        
+        // Add some basic styling
+        const style = document.createElement('style');
+        style.textContent = `
+          .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .toast {
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            text-align: center;
+          }
+          .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          .toast.info {
+            background-color: #2196F3;
+          }
+          .toast.success {
+            background-color: #4CAF50;
+          }
+          .toast.warning {
+            background-color: #FF9800;
+          }
+          .toast.error {
+            background-color: #F44336;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Create the toast element
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      
+      // Add to the container
+      toastContainer.appendChild(toast);
+      
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 10);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    }
+    
+    // Force service worker update and registration on each page load
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(registration => {
+          console.log('Service Worker registered with scope:', registration.scope);
+          
+          // Check for updates to the service worker
+          registration.update();
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+        
+      // Create a loading spinner that appears during service worker operations
+      const spinner = document.createElement('div');
+      spinner.className = 'loading-spinner';
+      document.body.appendChild(spinner);
+    }
+    
+    // Check if content fails to load and offer refresh
+    window.addEventListener('error', function(e) {
+      // Only handle resource loading errors
+      if (e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+        console.warn('Resource failed to load:', e.target.src || e.target.href);
+        
+        // If we're online but resources fail, it might be a caching issue
+        if (navigator.onLine && !document.body.classList.contains('resource-error-shown')) {
+          showToast('Some resources failed to load. Try refreshing the page.', 'warning');
+          document.body.classList.add('resource-error-shown');
+        }
+      }
+    }, true); // Use capturing to catch all resource errors
+    
+    // Add a helper function to check cache health
+    window.checkCacheHealth = async function() {
+      try {
+        if ('caches' in window) {
+          // Get all cache names
+          const cacheNames = await caches.keys();
+          console.log('Available caches:', cacheNames);
+          
+          // Check what's in each cache
+          for (const cacheName of cacheNames) {
+            const cache = await caches.open(cacheName);
+            const requests = await cache.keys();
+            console.log(`Cache "${cacheName}" contains ${requests.length} items`);
+            
+            // Log the first 5 items
+            console.log('Sample items:', requests.slice(0, 5).map(req => req.url));
+          }
+          
+          return 'Cache inspection complete. See console for details.';
+        } else {
+          return 'Cache API not available in this browser.';
+        }
+      } catch (error) {
+        console.error('Error checking cache:', error);
+        return 'Error checking cache: ' + error.message;
+      }
+    };
+    
+    // Periodically check for service worker updates (every 30 minutes)
+    setInterval(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.update();
+          console.log('Service worker update check');
+        });
+      }
+    }, 30 * 60 * 1000);
+  });
