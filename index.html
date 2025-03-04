@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Example</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" />
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css" />
+    <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+</head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body-left" class="leftMenu">
+            <forge-card class="menuCard">
+                <p class="forge-typography--heading1 menuHeader">Inmate menu</p>
+                <div style="padding:0 1rem 1rem 1rem;">
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Jail:</span> Tyler Demo Facility</p>
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Inmate:</span> Gerald Alderman</p>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="currentBalance">
+                            <p class="forge-typography--heading1 noMargin">Current balance:</p>
+                            <p class="forge-typography--heading1 noMargin" id="inmateBalance">$752.92</p>
+                        </div>
+                    </forge-card>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="medicalBalance">
+                            <p class="forge-typography--heading1 noMargin">Medical balance:</p>
+                            <p class="forge-typography--heading1 noMargin">$0.00</p>
+                        </div>
+                    </forge-card>
+                    <forge-card>
+                        <div class="savingsBalance">
+                            <p class="forge-typography--heading1 noMargin">Savings balance:</p>
+                            <p class="forge-typography--heading1 noMargin">$0.00</p>
+                        </div>
+                    </forge-card>
+                </div>
+            </forge-card>
+        </div>
+        <div slot="body" class="rightBody">
+            <div class="btnContainer">
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="cart"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">New order</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="cart"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Commissary</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img"
+                                    name="compare_arrows" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Transaction history</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="star"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Premium content</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="book"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">E-books</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="book_education" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Educational links</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="mail"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Mailroom</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="video"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Video chat</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="thumb_down"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Grievance system</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="chat"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Request system</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img"
+                                    name="medical_services" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Medical request</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="scale_balance" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Law library</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="video_account" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Video visitation</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="newspaper"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">News</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="book_account" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Inmate handbook</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="info"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">PREA Information</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="file_document_multiple" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Jail Documents</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="file_document_edit" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Forms</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="standard" slot="start" role="img" name="logout"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Log out</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="alert"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">PREA alert</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="alert_decagram" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Suicide alert</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img"
+                                    name="cellphone_information" aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Tipline</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </forge-stack>
+            </div>
+        </div>
+
+        <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img"
+                            name="arrow_up" aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img"
+                            name="arrow_down" aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div>
+    </forge-scaffold>
+
+
+
+
+
+
+    <script src="/scripts.js"></script>
+</body>
+
+</html>
