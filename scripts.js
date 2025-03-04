@@ -188,3 +188,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { once: true });
 
 });
+
+// PWA registration code - add this to your scripts.js file
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          
+          // Optional: Create an install button for the PWA
+          let deferredPrompt;
+          const installButton = document.createElement('forge-card');
+          installButton.className = 'actionBtn pwaInstallBtn';
+          installButton.style.display = 'none';
+          installButton.innerHTML = `
+            <forge-button-area>
+              <button slot="button" aria-labelledby="button-heading"></button>
+              <div class="content">
+                <forge-icon external external-type="standard" slot="start" role="img" name="get_app" 
+                  aria-label="Install app icon"></forge-icon>
+                <p class="forge-typography--heading3">Install App</p>
+              </div>
+            </forge-button-area>
+          `;
+          
+          // Add the install button to the header
+          const headerElement = document.querySelector('.logoHeader');
+          if (headerElement) {
+            headerElement.appendChild(installButton);
+          }
+          
+          // Show the install button when the PWA can be installed
+          window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installButton.style.display = 'block';
+          });
+          
+          // Handle the install button click
+          installButton.addEventListener('click', () => {
+            // Hide the install button
+            installButton.style.display = 'none';
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+              } else {
+                console.log('User dismissed the install prompt');
+              }
+              deferredPrompt = null;
+            });
+          });
+        })
+        .catch(error => {
+          console.error('ServiceWorker registration failed: ', error);
+        });
+    });
+  }
