@@ -3,6 +3,10 @@ body {
     background-color: var(--forge-theme-surface-container-minimum);
 }
 
+a {
+    text-decoration: none;
+}
+
 .logoHeader {
     background-color: var(--forge-theme-primary);
     padding: 1rem;
@@ -203,7 +207,7 @@ body {
 }
 
 .selectQuantityDialog {
-    --forge-dialog-width:50%;
+    --forge-dialog-width:60%;
 }
 
 .forge-card {

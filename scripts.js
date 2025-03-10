@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </forge-toolbar>
         <div slot="body" class="dialog-content">
           <p class="forge-typography--subheading2 itemName" style="margin-bottom:20px;">${itemName}</p>
-          <forge-stack inline gap="16" wrap>
+          <forge-stack inline gap="16" stretch wrap>
             ${quantityButtonsHTML}
           </forge-stack>
         </div>
@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <forge-card class="cartItemCard" style="margin-bottom: 8px;">
           <div style="padding: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <p class="forge-typography--heading3 noMargin">${item.name}</p>
+              <p class="forge-typography--heading1 noMargin">${item.name}</p>
               <forge-icon-button class="remove-item-btn" data-index="${index}" aria-label="Remove item">
                 <forge-icon name="close"></forge-icon>
               </forge-icon-button>
@@ -631,20 +631,20 @@ document.addEventListener('DOMContentLoaded', function() {
     cartHTML += `
       <forge-card style="margin-bottom: 8px;">
         <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
-          <p class="forge-typography--heading3 noMargin">Subtotal:</p>
-          <p class="forge-typography--heading3 noMargin">$${subtotal.toFixed(2)}</p>
+          <p class="forge-typography--heading1 noMargin">Subtotal:</p>
+          <p class="forge-typography--heading1 noMargin">$${subtotal.toFixed(2)}</p>
         </div>
       </forge-card>
       <forge-card style="margin-bottom: 8px;">
         <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
-          <p class="forge-typography--heading3 noMargin">Sales Tax (9%):</p>
-          <p class="forge-typography--heading3 noMargin">$${salesTax.toFixed(2)}</p>
+          <p class="forge-typography--heading1 noMargin">Sales Tax (9%):</p>
+          <p class="forge-typography--heading1 noMargin">$${salesTax.toFixed(2)}</p>
         </div>
       </forge-card>
       <forge-card style="margin-bottom: 16px;">
         <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
-          <p class="forge-typography--heading2 noMargin">Total:</p>
-          <p class="forge-typography--heading2 noMargin">$${totalCartValue.toFixed(2)}</p>
+          <p class="forge-typography--heading1 noMargin">Total:</p>
+          <p class="forge-typography--heading1 noMargin">$${totalCartValue.toFixed(2)}</p>
         </div>
       </forge-card>
       <forge-card class="actionBtn">
@@ -707,19 +707,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add CSS for quantity dialog
   const styleElement = document.createElement('style');
   styleElement.textContent = `
-    .quantityFlex {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      min-width: 80px;
-      text-align: center;
-    }
     
     .quantityBtn {
       cursor: pointer;
-      margin-bottom: 8px;
     }
     
     .quantityBtn:hover {
@@ -1017,36 +1007,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // No controller yet, just reload
         window.location.reload(true);
       }
-    };
-    
-    // Add a debug button to help users force refresh styling
-    const debugButton = document.createElement('forge-card');
-    debugButton.className = 'actionBtn debugBtn';
-    debugButton.style.marginTop = '16px';
-    debugButton.innerHTML = `
-      <forge-button-area>
-        <button slot="button" aria-labelledby="button-heading"></button>
-        <div class="content">
-          <forge-icon external external-type="standard" slot="start" role="img" name="refresh" 
-            aria-label="Refresh styles"></forge-icon>
-          <p class="forge-typography--heading3">Refresh Styles</p>
-        </div>
-      </forge-button-area>
-    `;
-    
-    // Add the debug button to the footer or another suitable location
-    setTimeout(() => {
-      const headerElement = document.querySelector('.logoHeader');
-      if (headerElement) {
-        headerElement.appendChild(debugButton);
-      }
-      
-      // Add click event for style refresh
-      debugButton.addEventListener('click', () => {
-        showToast('Refreshing styles...', 'info');
-        window.forceStyleRefresh();
-      });
-    }, 1000);
+    }; 
   }
   
   // Enhanced toast function (with optional persistence)
