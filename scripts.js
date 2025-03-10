@@ -416,4 +416,519 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30 * 60 * 1000);
   });
 
+
+  // Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Cart items array to store purchases
+  let cartItems = [];
   
+  // Store original balance value when page loads
+  const originalBalance = document.getElementById('inmateBalance').textContent;
+  
+  // Function to show order confirmation dialog
+  function showOrderConfirmationDialog(subtotal, salesTax, totalCartValue) {
+    // Create dialog if it doesn't exist
+    let dialogElement = document.querySelector('.orderConfirmationDialog');
+    if (!dialogElement) {
+      dialogElement = document.createElement('forge-dialog');
+      dialogElement.className = 'orderConfirmationDialog';
+      document.body.appendChild(dialogElement);
+    }
+    
+    // Set dialog content
+    dialogElement.innerHTML = `
+      <forge-scaffold>
+        <forge-toolbar slot="header">
+          <h1 class="forge-typography--heading4" id="confirmation-title" slot="start">
+            Order Confirmation
+          </h1>
+          <forge-icon-button slot="end" aria-label="Close dialog" class="confirm-close-btn">
+            <forge-icon name="close"></forge-icon>
+          </forge-icon-button>
+        </forge-toolbar>
+        <div slot="body" class="dialog-content">
+          <forge-card style="margin-bottom: 16px;">
+            <div style="padding: 16px;">
+              <p class="forge-typography--heading1" style="color: green; text-align: center; margin-bottom: 16px;">
+                Order Submitted Successfully
+              </p>
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <p class="forge-typography--heading3 noMargin">Subtotal:</p>
+                  <p class="forge-typography--heading3 noMargin">$${subtotal.toFixed(2)}</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <p class="forge-typography--heading3 noMargin">Sales Tax (9%):</p>
+                  <p class="forge-typography--heading3 noMargin">$${salesTax.toFixed(2)}</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #eee;">
+                  <p class="forge-typography--heading2 noMargin">Total:</p>
+                  <p class="forge-typography--heading2 noMargin">$${totalCartValue.toFixed(2)}</p>
+                </div>
+              </div>
+              <p class="forge-typography--subheading1" style="text-align: center;">
+                Your order has been submitted. Thank you for your purchase!
+              </p>
+            </div>
+          </forge-card>
+        </div>
+        <forge-toolbar slot="footer" inverted>
+          <forge-button slot="end" variant="filled" class="confirm-done-btn">Done</forge-button>
+        </forge-toolbar>
+      </forge-scaffold>
+    `;
+    
+    // Show dialog
+    dialogElement.open = true;
+    
+    // Add event listeners to close and done buttons
+    const closeBtn = dialogElement.querySelector('.confirm-close-btn');
+    const doneBtn = dialogElement.querySelector('.confirm-done-btn');
+    
+    const closeDialog = () => {
+      dialogElement.open = false;
+    };
+    
+    closeBtn.addEventListener('click', closeDialog);
+    doneBtn.addEventListener('click', closeDialog);
+  }
+  
+  // Function to show quantity selection dialog
+  function showQuantityDialog(itemName, price) {
+    // Create dialog if it doesn't exist
+    let dialogElement = document.querySelector('.selectQuantityDialog');
+    if (!dialogElement) {
+      dialogElement = document.createElement('forge-dialog');
+      dialogElement.className = 'selectQuantityDialog';
+      document.body.appendChild(dialogElement);
+    }
+    
+    // Generate quantities (1-12)
+    const quantities = Array.from({ length: 12 }, (_, i) => i + 1);
+    
+    // Generate HTML for quantity buttons
+    let quantityButtonsHTML = '';
+    quantities.forEach(qty => {
+      const totalPrice = (price * qty).toFixed(2);
+      quantityButtonsHTML += `
+        <forge-card class="quantityBtn" data-quantity="${qty}" data-price="${totalPrice}">
+          <div class="quantityFlex">
+            <p class="forge-typography--heading1 quantity">${qty}</p>
+            <p class="forge-typography--subheading1 pricePerQuantity">$${totalPrice}</p>
+          </div>
+        </forge-card>
+      `;
+    });
+    
+    // Set dialog content
+    dialogElement.innerHTML = `
+      <forge-scaffold>
+        <forge-toolbar slot="header">
+          <h1 class="forge-typography--heading4" id="dialog-title" slot="start">
+            Select quantity
+          </h1>
+          <forge-icon-button slot="end" aria-label="Close dialog" class="dialog-close-btn">
+            <forge-icon name="close"></forge-icon>
+          </forge-icon-button>
+        </forge-toolbar>
+        <div slot="body" class="dialog-content">
+          <p class="forge-typography--subheading2 itemName" style="margin-bottom:20px;">${itemName}</p>
+          <forge-stack inline gap="16" wrap>
+            ${quantityButtonsHTML}
+          </forge-stack>
+        </div>
+        <forge-toolbar slot="footer" inverted>
+          <forge-button slot="end" variant="outlined" class="cancel-btn">Cancel</forge-button>
+        </forge-toolbar>
+      </forge-scaffold>
+    `;
+    
+    // Show dialog
+    dialogElement.open = true;
+    
+    // Add event listeners to quantity buttons
+    const quantityButtons = dialogElement.querySelectorAll('.quantityBtn');
+    quantityButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const quantity = parseInt(this.dataset.quantity);
+        const totalPrice = parseFloat(this.dataset.price);
+        
+        // Add to cart
+        addToCart(itemName, quantity, price, totalPrice);
+        
+        // Close dialog
+        dialogElement.open = false;
+      });
+    });
+    
+    // Add event listeners to close and cancel buttons
+    const closeBtn = dialogElement.querySelector('.dialog-close-btn');
+    const cancelBtn = dialogElement.querySelector('.cancel-btn');
+    
+    closeBtn.addEventListener('click', () => {
+      dialogElement.open = false;
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+      dialogElement.open = false;
+    });
+  }
+  
+  // Function to add item to cart
+  function addToCart(itemName, quantity, unitPrice, totalPrice) {
+    // Create cart item object
+    const cartItem = {
+      name: itemName,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      totalPrice: totalPrice
+    };
+    
+    // Add to cart items array
+    cartItems.push(cartItem);
+    
+    // Update cart display
+    updateCartDisplay();
+  }
+  
+  // Function to update cart display
+  function updateCartDisplay() {
+    const cartContainer = document.querySelector('.cartItems');
+    
+    if (cartItems.length === 0) {
+      cartContainer.innerHTML = '<p class="forge-typography--heading1">No items added to cart</p>';
+      return;
+    }
+    
+    let cartHTML = '';
+    let subtotal = 0;
+    
+    cartItems.forEach((item, index) => {
+      subtotal += item.totalPrice;
+      cartHTML += `
+        <forge-card class="cartItemCard" style="margin-bottom: 8px;">
+          <div style="padding: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <p class="forge-typography--heading3 noMargin">${item.name}</p>
+              <forge-icon-button class="remove-item-btn" data-index="${index}" aria-label="Remove item">
+                <forge-icon name="close"></forge-icon>
+              </forge-icon-button>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+              <p class="forge-typography--subheading1 noMargin">Qty: ${item.quantity}</p>
+              <p class="forge-typography--subheading1 noMargin">$${item.totalPrice.toFixed(2)}</p>
+            </div>
+          </div>
+        </forge-card>
+      `;
+    });
+    
+    // Calculate tax and total
+    const salesTax = subtotal * 0.09;
+    const totalCartValue = subtotal + salesTax;
+    
+    // Add subtotal, tax, and total to cart
+    cartHTML += `
+      <forge-card style="margin-bottom: 8px;">
+        <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <p class="forge-typography--heading3 noMargin">Subtotal:</p>
+          <p class="forge-typography--heading3 noMargin">$${subtotal.toFixed(2)}</p>
+        </div>
+      </forge-card>
+      <forge-card style="margin-bottom: 8px;">
+        <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <p class="forge-typography--heading3 noMargin">Sales Tax (9%):</p>
+          <p class="forge-typography--heading3 noMargin">$${salesTax.toFixed(2)}</p>
+        </div>
+      </forge-card>
+      <forge-card style="margin-bottom: 16px;">
+        <div style="padding: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <p class="forge-typography--heading2 noMargin">Total:</p>
+          <p class="forge-typography--heading2 noMargin">$${totalCartValue.toFixed(2)}</p>
+        </div>
+      </forge-card>
+      <forge-card class="actionBtn">
+        <forge-button-area>
+          <button slot="button" aria-labelledby="checkout-btn"></button>
+          <div class="content">
+            <forge-icon external external-type="extended" slot="start" role="img" name="shopping_cart" aria-label="Shopping cart"></forge-icon>
+            <p class="forge-typography--heading1">Checkout</p>
+          </div>
+        </forge-button-area>
+      </forge-card>
+    `;
+    
+    cartContainer.innerHTML = cartHTML;
+    
+    // Important: NO balance updates here! Balance only changes on checkout
+    
+    // Add event listeners to remove buttons
+    const removeButtons = cartContainer.querySelectorAll('.remove-item-btn');
+    removeButtons.forEach(button => {
+      button.addEventListener('click', function(event) {
+        event.stopPropagation(); // Prevent bubbling to parent elements
+        const index = parseInt(this.dataset.index);
+        removeCartItem(index);
+      });
+    });
+    
+    // Add event listener to checkout button
+    const checkoutButton = cartContainer.querySelector('.actionBtn');
+    if (checkoutButton) {
+      checkoutButton.addEventListener('click', function() {
+        // Calculate final values for checkout
+        const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+        const salesTax = subtotal * 0.09;
+        const totalCartValue = subtotal + salesTax;
+        
+        // Update inmate balance only at checkout
+        const initialBalance = parseFloat(originalBalance.replace('$', ''));
+        const remainingBalance = initialBalance - totalCartValue;
+        document.getElementById('inmateBalance').textContent = `$${remainingBalance.toFixed(2)}`;
+        
+        // Show confirmation dialog instead of alert
+        showOrderConfirmationDialog(subtotal, salesTax, totalCartValue);
+        
+        // Clear cart after checkout
+        cartItems = [];
+        updateCartDisplay();
+      });
+    }
+  }
+  
+  // Function to remove item from cart
+  function removeCartItem(index) {
+    if (index >= 0 && index < cartItems.length) {
+      cartItems.splice(index, 1);
+      updateCartDisplay();
+    }
+  }
+
+  // Add CSS for quantity dialog
+  const styleElement = document.createElement('style');
+  styleElement.textContent = `
+    .quantityFlex {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .quantityBtn {
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    
+    .quantityBtn:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .dialog-content {
+      padding: 16px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    .cartItemCard {
+      margin-bottom: 8px;
+    }
+    
+    .noMargin {
+      margin: 0;
+    }
+  `;
+  document.head.appendChild(styleElement);
+  
+  // Get all category buttons
+  const categoryButtons = document.querySelectorAll('.categoriesContainer .actionBtn');
+  
+  // Get the items container and categories container
+  const itemsContainer = document.querySelector('.itemsContainer');
+  const categoriesContainer = document.querySelector('.categoriesContainer');
+  
+  // Define products by category
+  const productsByCategory = {
+    "Food": [
+      { name: "Cheesy Gordita Crunch", price: 4.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Doritos Locos Taco", price: 5.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Beef Burrito", price: 3.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Crunchwrap Supreme", price: 4.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Candy": [
+      { name: "Snickers Bar", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "M&Ms", price: 1.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Reese's Peanut Butter Cups", price: 1.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Twix", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Indigent": [
+      { name: "Basic Toiletry Kit", price: 0.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Soap", price: 0.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Toothbrush", price: 0.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Toothpaste", price: 0.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Apparel": [
+      { name: "T-Shirt", price: 10.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Socks (3 Pack)", price: 5.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Underwear", price: 4.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Thermal Undershirt", price: 8.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Beverages": [
+      { name: "Bottled Water", price: 1.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Orange Juice", price: 2.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Soda (Can)", price: 1.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Gatorade", price: 2.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Chips/Crackers/Nuts": [
+      { name: "Doritos", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Cheez-It Crackers", price: 1.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Peanuts", price: 1.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Potato Chips", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Coffee/Drinks": [
+      { name: "Instant Coffee Packets", price: 0.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Hot Chocolate Mix", price: 0.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Powdered Lemonade", price: 0.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Tea Bags", price: 0.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Conditments/Cheese": [
+      { name: "Hot Sauce Packets", price: 0.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Cheese Spread", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Ketchup Packets", price: 0.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Mayonnaise Packets", price: 0.25, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Cookies/Pastries": [
+      { name: "Chocolate Chip Cookies", price: 2.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Honey Bun", price: 1.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Oatmeal Cookies", price: 2.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Vanilla Wafers", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Gift Baskets": [
+      { name: "Snack Bundle", price: 15.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Comfort Package", price: 20.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Hygiene Kit", price: 12.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Sweet Treats Pack", price: 18.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Hair products": [
+      { name: "Shampoo", price: 3.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Conditioner", price: 3.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Hair Gel", price: 2.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Comb", price: 1.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Leisure": [
+      { name: "Playing Cards", price: 3.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Puzzle Book", price: 4.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Word Search Book", price: 3.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Checkers Set", price: 5.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Medical": [
+      { name: "Pain Reliever", price: 2.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Antacid", price: 2.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Bandages", price: 1.75, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Cough Drops", price: 1.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ],
+    "Nicotine": [
+      { name: "Nicotine Patches", price: 8.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Nicotine Gum", price: 7.50, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Nicotine Lozenges", price: 7.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" },
+      { name: "Smoking Cessation Guide", price: 1.00, image: "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
+    ]
+  };
+  
+  // Initially hide the items container
+  itemsContainer.style.display = 'none';
+  
+  // Function to generate HTML for product items
+  function generateProductHTML(products) {
+    // Create an array to hold pairs of products for each row
+    const productRows = [];
+    for (let i = 0; i < products.length; i += 2) {
+      const row = [products[i]];
+      if (i + 1 < products.length) {
+        row.push(products[i + 1]);
+      }
+      productRows.push(row);
+    }
+    
+    // Generate HTML for each row of products
+    let html = '';
+    productRows.forEach(row => {
+      html += '<forge-stack inline stretch gap="16">';
+      
+      row.forEach(product => {
+        html += `
+          <forge-card class="itemBtn">
+            <div class="itemFlex">
+              <div class="itemNamePrice">
+                <p class="forge-typography--heading3 itemName">${product.name}</p>
+                <p class="forge-typography--heading3 price">$${product.price.toFixed(2)}</p>
+              </div>
+              <img src="${product.image}" class="productImg" />
+            </div>
+          </forge-card>
+        `;
+      });
+      
+      // If there's only one product in the row, add an empty placeholder
+      if (row.length === 1) {
+        html += '<div style="flex: 1;"></div>';
+      }
+      
+      html += '</forge-stack>';
+    });
+    
+    return html;
+  }
+  
+  // Add click event listener to each category button
+  categoryButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Get the category name from the button
+      const categoryName = this.querySelector('.forge-typography--heading1').textContent;
+      
+      // Update the category name in the items container header
+      document.querySelector('.categoryName').textContent = categoryName;
+      
+      // Get products for this category
+      const products = productsByCategory[categoryName] || [];
+      
+      // Generate HTML for the products
+      const productsHTML = generateProductHTML(products);
+      
+      // Update the items container content (keeping the toolbar at the top)
+      const toolbar = itemsContainer.querySelector('.categoriesToolbar').outerHTML;
+      itemsContainer.innerHTML = toolbar + productsHTML;
+      
+      // Reattach event listener to the close button
+      const closeButton = itemsContainer.querySelector('.categoriesToolbar forge-icon[name="close"]');
+      closeButton.addEventListener('click', function() {
+        // Hide the items container
+        itemsContainer.style.display = 'none';
+        
+        // Scroll back to categories container
+        categoriesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      
+      // Show the items container
+      itemsContainer.style.display = 'block';
+      
+      // Add click event listeners to item buttons
+      const itemButtons = itemsContainer.querySelectorAll('.itemBtn');
+      itemButtons.forEach(itemButton => {
+        itemButton.addEventListener('click', function() {
+          const itemName = this.querySelector('.itemName').textContent;
+          const priceText = this.querySelector('.price').textContent;
+          const price = parseFloat(priceText.replace('$', ''));
+          
+          // Show quantity selection dialog
+          showQuantityDialog(itemName, price);
+        });
+      });
+      
+      // Scroll to the items container with smooth behavior
+      itemsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+});

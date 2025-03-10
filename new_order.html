@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Replace your existing <head> section with this one -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyler Inmate System</title>
+
+    <!-- PWA support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Inmate App">
+
+    <!-- Fallback favicon -->
+    <link rel="shortcut icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg=="
+        type="image/png">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" />
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css" />
+    <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+
+    <!-- Add preload for critical forge resources -->
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" as="style">
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js" as="script">
+
+    <!-- Inline critical CSS for faster initial render -->
+    <style>
+        /* Critical styles for immediate display */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .logoHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Add a default spinner for loading state */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #2196F3;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Show spinner when offline detection is working */
+        body.is-offline .main-content {
+            display: none;
+        }
+
+        body.is-offline .loading-spinner {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body-left" class="leftMenu">
+            <forge-card class="menuCard">
+                <p class="forge-typography--heading1 menuHeader">Inmate menu</p>
+                <div style="padding:0 1rem 1rem 1rem;">
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Jail:</span> Tyler Demo Facility</p>
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Inmate:</span> Gerald Alderman</p>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="currentBalance">
+                            <p class="forge-typography--heading1 noMargin">Current balance:</p>
+                            <p class="forge-typography--heading1 noMargin" id="inmateBalance">$752.92</p>
+                        </div>
+                    </forge-card>
+                    <div class="cartItems">
+                        <p class="forge-typography--heading1">No items added to cart</p>
+                    </div>
+                    <forge-card class="actionBtn">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="menu"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Main menu</p>
+                            </div>
+                        </forge-button-area>
+                    </forge-card>
+                </div>
+            </forge-card>
+        </div>
+        <div slot="body" class="rightBody">
+            <div class="categoriesContainer">
+                <p class="forge-typography--heading1 itemsHeader">Categories menu - (click on category box below to view
+                    items)</p>
+                <div style="padding:1rem">
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Food</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Candy</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Indigent</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Apparel</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Beverages</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Chips/Crackers/Nuts</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Coffee/Drinks</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Conditments/Cheese</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Cookies/Pastries</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Gift Baskets</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Hair products</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Leisure</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                    <forge-stack inline stretch gap="16">
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Medical</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                        <forge-card class="actionBtn">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="dots_grid" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Nicotine</p>
+                                </div>
+                            </forge-button-area>
+                        </forge-card>
+                    </forge-stack>
+                </div>
+
+
+
+            </div>
+            <div class="itemsContainer">
+                <forge-toolbar class="categoriesToolbar" no-divider>
+                    <div slot="start">
+                        <p class="forge-typography--heading2 categoryName">Food</p>
+                    </div>
+                    <div slot="end"><forge-icon external external-type="extended" name="close"></forge-icon>
+                    </div>
+                </forge-toolbar>
+
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="itemBtn">
+                        <div class="itemFlex">
+                            <div class="itemNamePrice">
+                                <p class="forge-typography--heading3 itemName">Cheesy Gordita Crunch</p>
+                                <p class="forge-typography--heading3 price">$4.00</p>
+                            </div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                                class="productImg" />
+                        </div>
+                    </forge-card>
+                    <forge-card class="itemBtn">
+                        <div class="itemFlex">
+                            <div class="itemNamePrice">
+                                <p class="forge-typography--heading3 itemName">Doritos Locos Taco</p>
+                                <p class="forge-typography--heading3 price">$5.00</p>
+                            </div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                                class="productImg" />
+                        </div>
+                    </forge-card>
+                </forge-stack>
+                <forge-stack inline stretch gap="16">
+                    <forge-card class="itemBtn">
+                        <div class="itemFlex">
+                            <div class="itemNamePrice">
+                                <p class="forge-typography--heading3 itemName">Lance Captain Wafers</p>
+                                <p class="forge-typography--heading3 price">$1.25</p>
+                            </div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                                class="productImg" />
+                        </div>
+                    </forge-card>
+                    <forge-card class="itemBtn">
+                        <div class="itemFlex">
+                            <div class="itemNamePrice">
+                                <p class="forge-typography--heading3 itemName">Lance Tasty Crackers</p>
+                                <p class="forge-typography--heading3 price">$1.32</p>
+                            </div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                                class="productImg" />
+                        </div>
+                    </forge-card>
+                </forge-stack>
+
+
+            </div>
+
+        </div>
+
+        <!-- <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_up"
+                            aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_down"
+                            aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div> -->
+    </forge-scaffold>
+
+    <forge-dialog class="selectQuantityDialog">
+        <forge-scaffold>
+            <forge-toolbar slot="header">
+                <h1 class="forge-typography--heading4" id="dialog-title" slot="start">
+                    Select quantity
+                </h1>
+                <forge-icon-button slot="end" aria-label="Close dialog">
+                    <forge-icon name="close"></forge-icon>
+                </forge-icon-button>
+            </forge-toolbar>
+            <div slot="body" class="dialog-content">
+                <p class="forge-typography--subheading2 itemName" style="margin-bottom:20px;">Doritos Locos Tacos</p>
+                <forge-stack inline gap="16" wrap>
+                    <forge-card class="quantityBtn">
+                        <div class="quantityFlex">
+                            <p class="forge-typography--heading1 quantity">1</p>
+                            <p class="forge-typography--subheading1 pricePerQuantity">$1.25</p>
+                        </div>
+                    </forge-card>
+                    <forge-card class="quantityBtn">
+                        <div class="quantityFlex">
+                            <p class="forge-typography--heading1 quantity">2</p>
+                            <p class="forge-typography--subheading1 pricePerQuantity">$2.50</p>
+                        </div>
+                    </forge-card>
+                </forge-stack>
+            </div>
+            <forge-toolbar slot="footer" inverted>
+                <forge-button slot="end" variant="outlined">Cancel</forge-button>
+            </forge-toolbar>
+        </forge-scaffold>
+    </forge-dialog>
+
+
+
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
