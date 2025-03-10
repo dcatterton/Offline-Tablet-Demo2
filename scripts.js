@@ -932,3 +932,219 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+
+// Enhanced PWA support for style updates
+document.addEventListener('DOMContentLoaded', function() {
+  // Register and manage service worker
+  if ('serviceWorker' in navigator) {
+    let refreshing = false;
+
+    // Handle service worker updates more gracefully
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        console.log('Service Worker controller changed - refreshing page');
+        window.location.reload();
+      }
+    });
+
+    // Updated registration with better error handling and update detection
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope:', registration.scope);
+          
+          // Check for updates immediately
+          registration.update();
+          
+          // Watch for updates to the service worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            console.log('Service Worker update found!');
+            
+            // We have an updated service worker
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New service worker is installed but waiting
+                console.log('New Service Worker installed and waiting');
+                
+                // Show refresh notification to user
+                showToast('New version available! Refresh the page to update.', 'info', true);
+                
+                // Add refresh button to toast
+                const refreshButton = document.createElement('forge-button');
+                refreshButton.setAttribute('variant', 'outlined');
+                refreshButton.style.marginTop = '8px';
+                refreshButton.textContent = 'Update Now';
+                
+                const toast = document.querySelector('.toast.info.show');
+                if (toast) {
+                  toast.appendChild(refreshButton);
+                  
+                  refreshButton.addEventListener('click', () => {
+                    // Tell the service worker to skipWaiting
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  });
+                }
+              }
+            });
+          });
+          
+          // Add PWA install button functionality
+          // ... (existing install button code)
+        })
+        .catch(error => {
+          console.error('ServiceWorker registration failed:', error);
+          showToast('Error setting up offline capabilities. Some features may not work.', 'error');
+        });
+    });
+    
+    // Add a force refresh function for style issues
+    window.forceStyleRefresh = function() {
+      // Clear caches and reload page
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CLEAR_CACHE'
+        });
+        
+        navigator.serviceWorker.addEventListener('message', event => {
+          if (event.data && event.data.type === 'CACHE_CLEARED') {
+            window.location.reload(true); // Force reload from server
+          }
+        }, { once: true });
+      } else {
+        // No controller yet, just reload
+        window.location.reload(true);
+      }
+    };
+    
+    // Add a debug button to help users force refresh styling
+    const debugButton = document.createElement('forge-card');
+    debugButton.className = 'actionBtn debugBtn';
+    debugButton.style.marginTop = '16px';
+    debugButton.innerHTML = `
+      <forge-button-area>
+        <button slot="button" aria-labelledby="button-heading"></button>
+        <div class="content">
+          <forge-icon external external-type="standard" slot="start" role="img" name="refresh" 
+            aria-label="Refresh styles"></forge-icon>
+          <p class="forge-typography--heading3">Refresh Styles</p>
+        </div>
+      </forge-button-area>
+    `;
+    
+    // Add the debug button to the footer or another suitable location
+    setTimeout(() => {
+      const headerElement = document.querySelector('.logoHeader');
+      if (headerElement) {
+        headerElement.appendChild(debugButton);
+      }
+      
+      // Add click event for style refresh
+      debugButton.addEventListener('click', () => {
+        showToast('Refreshing styles...', 'info');
+        window.forceStyleRefresh();
+      });
+    }, 1000);
+  }
+  
+  // Enhanced toast function (with optional persistence)
+  function showToast(message, type = 'info', persistent = false) {
+    // Check if we already have a toast container
+    let toastContainer = document.querySelector('.toast-container');
+    
+    if (!toastContainer) {
+      // Create a container for toast messages
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      document.body.appendChild(toastContainer);
+      
+      // Add some basic styling if not already present
+      if (!document.querySelector('style[data-for="toast"]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-for', 'toast');
+        style.textContent = `
+          .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .toast {
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            text-align: center;
+          }
+          .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          .toast.info {
+            background-color: #2196F3;
+          }
+          .toast.success {
+            background-color: #4CAF50;
+          }
+          .toast.warning {
+            background-color: #FF9800;
+          }
+          .toast.error {
+            background-color: #F44336;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+    
+    // Create the toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    // Add to the container
+    toastContainer.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+    
+    // Only auto-remove if not persistent
+    if (!persistent) {
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    } else {
+      // Add a close button for persistent toast
+      const closeBtn = document.createElement('forge-icon-button');
+      closeBtn.style.marginLeft = '8px';
+      closeBtn.style.color = 'white';
+      closeBtn.innerHTML = '<forge-icon name="close"></forge-icon>';
+      toast.appendChild(closeBtn);
+      
+      closeBtn.addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      });
+    }
+    
+    return toast; // Return the toast element for potential further manipulation
+  }
+});
