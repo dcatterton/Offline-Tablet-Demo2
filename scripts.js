@@ -1110,49 +1110,254 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Service Worker Registration - Add this to your scripts.js file
+// Enhanced Service Worker Registration - Add to scripts.js
+// Replace existing registration code with this improved version
+
 if ('serviceWorker' in navigator) {
+  let refreshing = false;
+
+  // Listen for controlling service worker changing and refresh the page
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      console.log('Service Worker controller changed - refreshing page');
+      window.location.reload();
+    }
+  });
+  
+  // Helper function to show notifications
+  function showPWANotification(message, type = 'info', persistent = false) {
+    let toastContainer = document.querySelector('.toast-container');
+    
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      document.body.appendChild(toastContainer);
+      
+      if (!document.querySelector('style[data-for="toast"]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-for', 'toast');
+        style.textContent = `
+          .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .toast {
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 4px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            max-width: 320px;
+            text-align: center;
+          }
+          .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          .toast.info {
+            background-color: #2196F3;
+          }
+          .toast.success {
+            background-color: #4CAF50;
+          }
+          .toast.warning {
+            background-color: #FF9800;
+          }
+          .toast.error {
+            background-color: #F44336;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+    
+    if (!persistent) {
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 4000);
+    } else {
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'OK';
+      closeBtn.style.marginLeft = '12px';
+      closeBtn.style.background = 'transparent';
+      closeBtn.style.border = '1px solid white';
+      closeBtn.style.color = 'white';
+      closeBtn.style.padding = '4px 8px';
+      closeBtn.style.borderRadius = '4px';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.marginTop = '8px';
+      toast.appendChild(document.createElement('br'));
+      toast.appendChild(closeBtn);
+      
+      closeBtn.addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      });
+    }
+    
+    return toast;
+  }
+
+  // Register service worker as soon as page loads
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        console.log('ServiceWorker registration successful with scope:', registration.scope);
         
-        // Check for updates every hour
-        setInterval(() => {
-          registration.update();
-          console.log('Checking for service worker updates');
-        }, 60 * 60 * 1000);
+        // Check for updates immediately upon registration
+        registration.update();
+        
+        // Check for new service worker
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('New service worker installing:', newWorker);
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New service worker installed but waiting to activate');
+              
+              // Notify user about the update and provide an "Update Now" button
+              const toast = showPWANotification(
+                'New version available! Update now?', 
+                'info', 
+                true
+              );
+              
+              // Create update button
+              const updateButton = document.createElement('button');
+              updateButton.textContent = 'Update Now';
+              updateButton.style.background = 'white';
+              updateButton.style.color = '#2196F3';
+              updateButton.style.border = 'none';
+              updateButton.style.borderRadius = '4px';
+              updateButton.style.padding = '6px 12px';
+              updateButton.style.cursor = 'pointer';
+              updateButton.style.marginTop = '10px';
+              
+              // Replace the OK button with the update button
+              const okButton = toast.querySelector('button');
+              if (okButton) {
+                okButton.parentNode.replaceChild(updateButton, okButton);
+              } else {
+                toast.appendChild(document.createElement('br'));
+                toast.appendChild(updateButton);
+              }
+              
+              // Send skip waiting message when user clicks update
+              updateButton.addEventListener('click', () => {
+                if (newWorker && newWorker.state === 'installed') {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+                toast.classList.remove('show');
+                setTimeout(() => {
+                  toast.remove();
+                }, 300);
+              });
+            }
+          });
+        });
+        
+        // Make the function available globally for debugging
+        window.updateServiceWorker = () => {
+          registration.update().then(() => {
+            showPWANotification('Checking for updates...', 'info');
+          });
+        };
       })
       .catch(error => {
-        console.error('ServiceWorker registration failed: ', error);
+        console.error('ServiceWorker registration failed:', error);
+        showPWANotification('Failed to enable offline features. Please reload.', 'error');
       });
   });
 
-  // Add offline/online detection
+  // Listen for online/offline events
   window.addEventListener('online', () => {
-    console.log('App is online');
+    console.log('App is now online');
     document.body.classList.remove('is-offline');
-    // Show a notification that we're back online
-    if (window.showToast) {
-      window.showToast('You are back online!', 'success');
+    showPWANotification('You are back online!', 'success');
+    
+    // Try to update cached resources now that we're back online
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'ONLINE_AGAIN'
+      });
     }
   });
 
   window.addEventListener('offline', () => {
-    console.log('App is offline');
+    console.log('App is now offline');
     document.body.classList.add('is-offline');
-    // Show an offline notification
-    if (window.showToast) {
-      window.showToast('You are offline. Some features may be limited.', 'warning');
-    }
+    showPWANotification('You are offline. Some features may be limited.', 'warning');
   });
 
-  // Add a helper function to test offline functionality
-  window.testOfflineMode = function() {
-    document.body.classList.add('is-offline');
-    if (window.showToast) {
-      window.showToast('Offline test mode activated. Refresh to restore.', 'info', true);
+  // Add a helper function for clearing cache - useful for troubleshooting
+  window.clearAppCache = () => {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'CLEAR_CACHE'
+      });
+      
+      showPWANotification('Clearing cache. Page will refresh...', 'info');
+      
+      // Listen for confirmation from the service worker
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'CACHE_CLEARED') {
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 1000);
+        }
+      }, { once: true });
+      
+      return 'Clearing application cache...';
+    } else {
+      showPWANotification('No service worker available.', 'error');
+      return 'No service worker available.';
     }
-    return 'App is now in offline test mode. Refresh to restore normal operation.';
   };
+  
+  // Add fallback for missing images
+  window.addEventListener('error', (event) => {
+    if (event.target.tagName === 'IMG') {
+      console.log('Image failed to load:', event.target.src);
+      
+      // Use a data URL as a fallback
+      event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"%3E%3Crect width="200" height="150" fill="%23f5f5f5"/%3E%3Crect x="70" y="45" width="60" height="45" fill="%23e0e0e0"/%3E%3Cpath d="M70 90 L100 65 L130 90" fill="%23d0d0d0"/%3E%3Ccircle cx="85" cy="60" r="7" fill="%23c0c0c0"/%3E%3Ctext x="100" y="115" font-family="sans-serif" font-size="13" text-anchor="middle" fill="%23767676"%3EImage Unavailable%3C/text%3E%3C/svg%3E';
+      
+      // Prevent the default error behavior
+      event.preventDefault();
+    }
+  }, true);
+  
+  // Make toast function globally available
+  window.showToast = showPWANotification;
+
+  // Test if we're currently in offline mode
+  if (!navigator.onLine) {
+    document.body.classList.add('is-offline');
+  }
 }
