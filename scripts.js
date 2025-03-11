@@ -1109,3 +1109,50 @@ document.addEventListener('DOMContentLoaded', function() {
     return toast; // Return the toast element for potential further manipulation
   }
 });
+
+// Service Worker Registration - Add this to your scripts.js file
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        
+        // Check for updates every hour
+        setInterval(() => {
+          registration.update();
+          console.log('Checking for service worker updates');
+        }, 60 * 60 * 1000);
+      })
+      .catch(error => {
+        console.error('ServiceWorker registration failed: ', error);
+      });
+  });
+
+  // Add offline/online detection
+  window.addEventListener('online', () => {
+    console.log('App is online');
+    document.body.classList.remove('is-offline');
+    // Show a notification that we're back online
+    if (window.showToast) {
+      window.showToast('You are back online!', 'success');
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    console.log('App is offline');
+    document.body.classList.add('is-offline');
+    // Show an offline notification
+    if (window.showToast) {
+      window.showToast('You are offline. Some features may be limited.', 'warning');
+    }
+  });
+
+  // Add a helper function to test offline functionality
+  window.testOfflineMode = function() {
+    document.body.classList.add('is-offline');
+    if (window.showToast) {
+      window.showToast('Offline test mode activated. Refresh to restore.', 'info', true);
+    }
+    return 'App is now in offline test mode. Refresh to restore normal operation.';
+  };
+}
