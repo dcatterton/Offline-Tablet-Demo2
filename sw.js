@@ -1,20 +1,26 @@
-// Service Worker with robust offline support - v3
-const CACHE_NAME = 'inmate-app-v3';
+// Mobile-Optimized Service Worker for PWA home screen support
+const CACHE_NAME = 'inmate-app-v4';
+const APP_SHELL = 'app-shell-v4';
 
-// Files to cache immediately on SW installation
-const precacheResources = [
+// App shell files (critical)
+const appShellFiles = [
   '/',
   '/index.html',
   '/new_order.html',
   '/styles.css',
   '/scripts.js',
-  '/manifest.json',
   '/offline.html',
+  '/manifest.json',
+  '/sw.js',
+  '/fallback-image.svg'
+];
+
+// CDN resources (non-critical but useful)
+const cdnResources = [
   'https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css',
   'https://cdn.forge.tylertech.com/v1/css/tyler-font.css',
   'https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js',
   'https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg',
-  // Font files that were failing
   'https://cdn.forge.tylertech.com/v1/fonts/roboto-v20-latin-500.woff2',
   'https://cdn.forge.tylertech.com/v1/fonts/roboto-v20-latin-regular.woff2',
   'https://cdn.forge.tylertech.com/v1/fonts/roboto-v20-latin-500.woff',
@@ -23,22 +29,36 @@ const precacheResources = [
   'https://cdn.forge.tylertech.com/v1/fonts/roboto-v20-latin-regular.ttf'
 ];
 
-// Install event - cache all initial resources
+// Install event - cache app shell immediately
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing...');
   
   // Skip waiting to activate immediately
   self.skipWaiting();
   
+  // We'll use two separate caches - one for APP_SHELL (immediate) and one for other resources
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    // Cache app shell first - this is critical
+    caches.open(APP_SHELL)
       .then(cache => {
-        console.log('[Service Worker] Caching app shell and content');
-        return cache.addAll(precacheResources)
+        console.log('[Service Worker] Caching app shell');
+        return cache.addAll(appShellFiles)
           .catch(error => {
-            console.error('[Service Worker] Pre-caching failed:', error);
-            // Continue even if some resources fail to cache
+            console.error('[Service Worker] App shell caching failed:', error);
+            // Continue with what we can cache
             return Promise.resolve();
+          });
+      })
+      .then(() => {
+        // Then attempt to cache CDN resources, but don't block activation
+        caches.open(CACHE_NAME)
+          .then(cache => {
+            console.log('[Service Worker] Caching CDN resources');
+            return cache.addAll(cdnResources)
+              .catch(error => {
+                console.error('[Service Worker] CDN caching failed:', error);
+                return Promise.resolve();
+              });
           });
       })
   );
@@ -47,11 +67,13 @@ self.addEventListener('install', event => {
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
   console.log('[Service Worker] Activating...');
+  
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.filter(cacheName => {
-          return cacheName !== CACHE_NAME;
+          // Delete old versions of our caches
+          return (cacheName !== CACHE_NAME && cacheName !== APP_SHELL);
         }).map(cacheName => {
           console.log('[Service Worker] Deleting old cache:', cacheName);
           return caches.delete(cacheName);
@@ -59,196 +81,331 @@ self.addEventListener('activate', event => {
       );
     }).then(() => {
       console.log('[Service Worker] Claiming clients');
-      return self.clients.claim(); // Take control of all clients immediately
+      return self.clients.claim(); // Take control immediately
     })
   );
 });
 
-// Helper function to create a network-first response strategy
-const networkFirst = async (request) => {
-  try {
-    // Try to get from network first
-    const networkResponse = await fetch(request);
-    
-    // If successful, clone and cache
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, networkResponse.clone());
-    
-    return networkResponse;
-  } catch (error) {
-    console.log('[Service Worker] Network request failed, trying cache', request.url);
-    
-    // If network fails, try the cache
-    const cachedResponse = await caches.match(request);
-    
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // For image requests, return a fallback image
-    if (request.destination === 'image') {
-      return caches.match('/fallback-image.png')
-        .catch(() => {
-          // If no fallback image, create a simple response
-          return new Response(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150">' +
-            '<rect width="100%" height="100%" fill="#f5f5f5"/>' +
-            '<text x="50%" y="50%" font-family="sans-serif" font-size="16" text-anchor="middle" fill="#767676">' +
-            'Image Unavailable' +
-            '</text>' +
-            '</svg>',
-            { 
-              headers: {'Content-Type': 'image/svg+xml'} 
-            }
-          );
-        });
-    }
-    
-    // For font requests, try to find any available font as fallback
-    if (request.url.includes('/fonts/')) {
-      const fontResponses = await caches.match(
-        new Request('https://cdn.forge.tylertech.com/v1/fonts/roboto-v20-latin-regular.woff2')
-      );
-      if (fontResponses) return fontResponses;
-    }
-    
-    // If this is a page navigation, return the offline page
-    if (request.mode === 'navigate') {
-      return caches.match('/offline.html')
-        .catch(() => {
-          // If no offline page, return a simple response
-          return new Response(
-            '<html><head><title>Offline</title></head><body style="font-family: sans-serif; padding: 20px;">' +
-            '<h1>You\'re Offline</h1><p>Please check your connection.</p></body></html>',
-            { 
-              headers: {'Content-Type': 'text/html'} 
-            }
-          );
-        });
-    }
-    
-    // Return an empty response for other resources
-    return new Response('', { 
-      status: 408,
-      headers: {'Content-Type': 'text/plain'}
-    });
+// Create offline fallback responses
+const createOfflineResponse = (type) => {
+  if (type === 'html') {
+    return caches.match('/offline.html')
+      .catch(() => {
+        return new Response(
+          '<html><head><title>Offline</title></head><body style="font-family:sans-serif;padding:20px;text-align:center;"><h1 style="color:#2196F3">You\'re Offline</h1><p>Please check your connection.</p></body></html>',
+          { headers: { 'Content-Type': 'text/html' } }
+        );
+      });
   }
+  
+  if (type === 'image') {
+    return caches.match('/fallback-image.svg')
+      .catch(() => {
+        return new Response(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"><rect width="200" height="150" fill="#f5f5f5"/><text x="100" y="75" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#888">Image Unavailable</text></svg>',
+          { headers: { 'Content-Type': 'image/svg+xml' } }
+        );
+      });
+  }
+  
+  // Default empty response for other types
+  return new Response('', { 
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers: { 'Content-Type': 'text/plain' }
+  });
 };
 
-// Fetch event - comprehensive strategy
+// Fetch event - focus on app shell reliability
 self.addEventListener('fetch', event => {
-  const requestUrl = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
   
-  // Handle navigation requests (HTML pages)
-  if (event.request.mode === 'navigate') {
+  // Process same-origin requests differently from CDN
+  const isSameOrigin = url.origin === self.location.origin;
+  
+  // Special strategy for HTML navigation
+  if (request.mode === 'navigate') {
     event.respondWith(
-      networkFirst(event.request)
+      fetch(request)
+        .catch(() => {
+          // If fetch fails, look in the app shell cache first
+          return caches.match(request, { cacheName: APP_SHELL })
+            .then(response => {
+              // Return cached response or fallback to offline page
+              if (response) {
+                return response;
+              }
+              return caches.match('/offline.html', { cacheName: APP_SHELL })
+                .then(offlineResponse => {
+                  if (offlineResponse) {
+                    return offlineResponse;
+                  }
+                  return createOfflineResponse('html');
+                });
+            });
+        })
     );
     return;
   }
   
-  // For CSS, JS and important assets - network first then fallback to cache
-  if (
-    requestUrl.pathname.endsWith('.css') ||
-    requestUrl.pathname.endsWith('.js') ||
-    requestUrl.href.includes('cdn.forge.tylertech.com')
-  ) {
-    event.respondWith(networkFirst(event.request));
+  // App shell resources - cache first for maximum reliability
+  if (isSameOrigin && appShellFiles.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(request, { cacheName: APP_SHELL })
+        .then(response => {
+          if (response) {
+            // If it's in our app shell cache, use it
+            return response;
+          }
+          
+          // If not in cache, try network and update cache
+          return fetch(request)
+            .then(networkResponse => {
+              // Cache the new app shell response
+              const responseToCache = networkResponse.clone();
+              caches.open(APP_SHELL).then(cache => {
+                cache.put(request, responseToCache);
+              });
+              return networkResponse;
+            })
+            .catch(error => {
+              console.error('Fetch failed for app shell:', error);
+              // For CSS/JS, better to show nothing than broken content
+              if (url.pathname.endsWith('.css')) {
+                return new Response('/* Offline stylesheet */', { 
+                  headers: { 'Content-Type': 'text/css' } 
+                });
+              }
+              
+              if (url.pathname.endsWith('.js')) {
+                return new Response('// Offline script', { 
+                  headers: { 'Content-Type': 'application/javascript' } 
+                });
+              }
+              
+              // For other app shell resources, return empty response
+              return createOfflineResponse('');
+            });
+        })
+    );
     return;
   }
   
-  // For image resources
-  if (event.request.destination === 'image') {
-    event.respondWith(networkFirst(event.request));
+  // CDN resources (like Forge, fonts, etc.)
+  if (url.href.includes('cdn.forge.tylertech.com')) {
+    event.respondWith(
+      caches.match(request, { cacheName: CACHE_NAME })
+        .then(response => {
+          if (response) {
+            // If in cache, use it
+            return response;
+          }
+          
+          // Try network and update cache
+          return fetch(request)
+            .then(networkResponse => {
+              if (networkResponse.ok) {
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(request, responseToCache);
+                });
+              }
+              return networkResponse;
+            })
+            .catch(error => {
+              console.error('Failed to fetch CDN resource:', error);
+              // For fonts
+              if (url.pathname.includes('/fonts/')) {
+                return new Response('', { 
+                  status: 503,
+                  headers: { 'Content-Type': 'application/font-woff2' } 
+                });
+              }
+              // For CSS
+              if (url.pathname.endsWith('.css')) {
+                return new Response('/* Offline CDN stylesheet */', { 
+                  headers: { 'Content-Type': 'text/css' } 
+                });
+              }
+              // For JavaScript
+              if (url.pathname.endsWith('.js')) {
+                return new Response('// Offline CDN script', { 
+                  headers: { 'Content-Type': 'application/javascript' } 
+                });
+              }
+              return createOfflineResponse('');
+            });
+        })
+    );
     return;
   }
   
-  // For font resources
-  if (
-    requestUrl.pathname.endsWith('.woff') ||
-    requestUrl.pathname.endsWith('.woff2') ||
-    requestUrl.pathname.endsWith('.ttf') ||
-    requestUrl.pathname.endsWith('.eot')
-  ) {
-    event.respondWith(networkFirst(event.request));
+  // Image resources 
+  if (request.destination === 'image') {
+    event.respondWith(
+      caches.match(request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          
+          return fetch(request)
+            .then(networkResponse => {
+              if (networkResponse.ok) {
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(request, responseToCache);
+                });
+              }
+              return networkResponse;
+            })
+            .catch(() => {
+              return createOfflineResponse('image');
+            });
+        })
+    );
     return;
   }
   
-  // Default strategy for everything else - cache first, then network
+  // Default fetch handler - cache then network with offline fallback
   event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          // Return the cached version
-          return cachedResponse;
+    caches.match(request)
+      .then(response => {
+        // Return from cache if available
+        if (response) {
+          return response;
         }
         
-        // Not in cache, try network
-        return fetch(event.request)
-          .then(response => {
-            // Don't cache non-successful responses or non-GET requests
-            if (!response || response.status !== 200 || event.request.method !== 'GET') {
-              return response;
-            }
-            
-            // Clone the response
-            const responseToCache = response.clone();
-            
-            // Add successful responses to cache
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              })
-              .catch(err => {
-                console.error('[Service Worker] Error caching new resource:', err);
+        // Otherwise fetch from network
+        return fetch(request)
+          .then(networkResponse => {
+            // Only cache successful responses 
+            if (networkResponse.ok && request.method === 'GET') {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(request, responseToCache);
               });
-            
-            return response;
+            }
+            return networkResponse;
           })
           .catch(error => {
-            console.error('[Service Worker] Fetch failed:', error);
+            console.error('Network fetch failed:', error);
             
-            // Return offline page for navigation requests
-            if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
+            // Provide appropriate fallback based on request type
+            if (request.destination === 'document') {
+              return createOfflineResponse('html');
+            }
+            if (request.destination === 'image') {
+              return createOfflineResponse('image');
+            }
+            if (request.destination === 'style') {
+              return new Response('/* Offline stylesheet */', { 
+                headers: { 'Content-Type': 'text/css' } 
+              });
+            }
+            if (request.destination === 'script') {
+              return new Response('// Offline script', { 
+                headers: { 'Content-Type': 'application/javascript' } 
+              });
             }
             
-            // For image requests, return a fallback image
-            if (event.request.destination === 'image') {
-              return caches.match('/fallback-image.png');
-            }
-            
-            // Return empty response for other resources
-            return new Response('', { 
-              status: 408,
-              headers: {'Content-Type': 'text/plain'}
-            });
+            // Default empty response
+            return createOfflineResponse('');
           });
       })
   );
 });
 
-// Listen for messages from the client
+// Add listener for client messages
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[Service Worker] Skip waiting message received');
+  if (!event.data) {
+    return;
+  }
+  
+  // Handle skip waiting message
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
   
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
+  // Handle clear cache message
+  if (event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => caches.delete(cacheName))
         );
       }).then(() => {
-        console.log('[Service Worker] All caches cleared by client request');
+        console.log('[Service Worker] All caches cleared');
+        
+        // Re-cache app shell immediately
+        return caches.open(APP_SHELL).then(cache => {
+          return cache.addAll(appShellFiles);
+        });
+      }).then(() => {
         // Notify client that caches were cleared
         if (event.source) {
           event.source.postMessage({
             type: 'CACHE_CLEARED'
           });
         }
+      })
+    );
+  }
+});
+
+// Special handling for standalone mode detection
+self.addEventListener('fetch', event => {
+  // Check if this is the first request after being launched from home screen
+  if (event.request.mode === 'navigate' && 
+      event.request.headers.get('Accept').includes('text/html')) {
+    
+    // Check if launched in standalone mode
+    event.respondWith(
+      // We'll check the client to see if we're in standalone mode
+      self.clients.matchAll({
+        includeUncontrolled: true,
+        type: 'window'
+      }).then(clients => {
+        // If we have a client, we'll check its display mode
+        if (clients.length > 0) {
+          const client = clients[0];
+          
+          // First, fetch the page the user requested
+          return fetch(event.request)
+            .then(response => {
+              // Clone the response so we can return one and modify the other
+              const responseToCache = response.clone();
+              
+              // Cache important navigations immediately
+              caches.open(APP_SHELL).then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+              
+              return response;
+            })
+            .catch(() => {
+              // If fetch fails, respond from cache
+              return caches.match(event.request)
+                .then(cachedResponse => {
+                  if (cachedResponse) {
+                    return cachedResponse;
+                  }
+                  
+                  // If nothing in cache, try the offline page
+                  return caches.match('/offline.html');
+                });
+            });
+        }
+        
+        // Default network-first strategy with offline fallback
+        return fetch(event.request)
+          .catch(() => {
+            return caches.match(event.request)
+              .then(cachedResponse => {
+                return cachedResponse || caches.match('/offline.html');
+              });
+          });
       })
     );
   }

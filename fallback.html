@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tyler Inmate System - Offline</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .app-header {
+            background-color: #2196F3;
+            color: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .app-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .app-content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .offline-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            color: #FF9800;
+        }
+        
+        .offline-title {
+            font-size: 24px;
+            margin: 0 0 16px 0;
+            color: #2196F3;
+        }
+        
+        .offline-message {
+            margin: 0 0 24px 0;
+            max-width: 320px;
+            line-height: 1.5;
+        }
+        
+        .offline-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 85%;
+            max-width: 400px;
+        }
+        
+        .retry-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 16px;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .retry-button:hover {
+            background-color: #1976D2;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #FF9800;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        
+        .cached-links {
+            margin-top: 32px;
+            text-align: center;
+        }
+        
+        .cached-links h3 {
+            margin: 0 0 16px 0;
+            color: #555;
+            font-size: 16px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .nav-button {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .nav-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            background-color: #2196F3;
+            border-radius: 50%;
+        }
+        
+        .app-footer {
+            padding: 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background-color: white;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">Tyler Inmate System</h1>
+            <div id="clock" style="font-size: 14px;">12:00:00</div>
+        </header>
+        
+        <main class="app-content">
+            <div class="offline-card">
+                <div class="offline-icon">📶</div>
+                <h2 class="offline-title">You're Offline</h2>
+                <p class="offline-message">
+                    Unable to connect to the Tyler Inmate System. 
+                    You appear to be offline.
+                </p>
+                
+                <button class="retry-button" onclick="retryConnection()">Retry Connection</button>
+                
+                <div class="connection-status">
+                    <span class="status-indicator"></span>
+                    <span id="connection-status-text">Waiting for connection...</span>
+                </div>
+            </div>
+            
+            <div class="cached-links">
+                <h3>Available Offline</h3>
+                <div class="nav-buttons">
+                    <a href="/index.html" class="nav-button">
+                        <span class="nav-icon"></span>
+                        Main Menu
+                    </a>
+                    <a href="/new_order.html" class="nav-button">
+                        <span class="nav-icon"></span>
+                        New Order
+                    </a>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="app-footer">
+            <p>© Tyler Technologies</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Update clock
+        function updateClock() {
+            const clockElement = document.getElementById('clock');
+            clockElement.textContent = new Date().toLocaleTimeString();
+        }
+        
+        // Initialize clock and update every second
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Connection monitoring
+        function updateConnectionStatus() {
+            const statusIndicator = document.querySelector('.status-indicator');
+            const statusText = document.getElementById('connection-status-text');
+            
+            if (navigator.onLine) {
+                statusIndicator.style.backgroundColor = '#4CAF50';
+                statusText.textContent = 'Connection detected! Reloading...';
+                
+                // Reload after a short delay to show the connection status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                statusIndicator.style.backgroundColor = '#FF9800';
+                statusText.textContent = 'Waiting for connection...';
+            }
+        }
+        
+        // Check connection status every 5 seconds
+        setInterval(updateConnectionStatus, 5000);
+        
+        // Listen for online/offline events
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // Retry connection button handler
+        function retryConnection() {
+            const button = document.querySelector('.retry-button');
+            button.textContent = 'Checking...';
+            button.disabled = true;
+            
+            // Check connection status
+            if (navigator.onLine) {
+                // If online, reload the page
+                window.location.reload();
+            } else {
+                // If still offline, update the button after a short delay
+                setTimeout(() => {
+                    button.textContent = 'Retry Connection';
+                    button.disabled = false;
+                    
+                    // Show message
+                    const statusText = document.getElementById('connection-status-text');
+                    statusText.textContent = 'Still offline. Please check your connection.';
+                }, 1500);
+            }
+        }
+        
+        // Initial connection check
+        updateConnectionStatus();
+    </script>
+</body>
+</html>

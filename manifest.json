@@ -3,12 +3,17 @@
   "short_name": "Inmate App",
   "description": "Inmate management system for correctional facilities",
   "start_url": "/index.html",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#2196F3",
   "theme_color": "#2196F3",
-  "orientation": "portrait-primary",
-  "id": "/index.html",
-  "scope": "/",
+  "categories": ["utilities", "productivity"],
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "icons": [
     {
       "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg==",
@@ -24,9 +29,13 @@
       "description": "Start a new commissary order"
     }
   ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 400 
+  },
   "screenshots": [],
-  "lang": "en-US",
-  "dir": "ltr",
-  "categories": ["utilities"],
-  "prefer_related_applications": false
+  "file_handlers": [],
+  "protocol_handlers": []
 }

@@ -9,11 +9,14 @@
     
         <!-- PWA support -->
         <link rel="manifest" href="manifest.json">
-        <meta name="theme-color" content="#2196F3">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <meta name="apple-mobile-web-app-title" content="Inmate App">
+<meta name="theme-color" content="#2196F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Inmate App">
+
+<!-- Add our PWA helper script early -->
+<script src="pwa-helper.js"></script>
     
         <!-- Fallback favicon -->
         <link rel="shortcut icon"
@@ -413,7 +416,21 @@
         </div> -->
     </forge-scaffold>
 
-
+<!-- Ensure service worker is loaded at the end -->
+<script>
+    // Force service worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope:', registration.scope);
+          })
+          .catch(error => {
+            console.error('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+  </script>
 
 
 
