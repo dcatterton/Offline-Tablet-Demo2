@@ -217,3 +217,100 @@ a {
 .quantityBtn {
     --forge-card-padding: 0;
 }
+
+.transactionsContainer {
+    background-color: #fff;
+    padding:0rem;
+    border:1px solid var(--forge-theme-outline);
+    border-radius: 4px;
+    margin-bottom:1rem;
+    font-size: 14px;
+    color:black;
+}
+
+.transactionTable {
+    width: 100%;
+    --forge-table-header-background-color: var(--forge-theme-background-2);
+    --forge-table-row-hover-background-color: var(--forge-theme-background-3);
+    --forge-table-border-color: var(--forge-theme-border-subtle);
+}
+
+/* Negative amount styling fallback */
+.negative-amount {
+    color: red !important;
+}
+
+.mailroomContainer {
+    background-color: #fff;
+    padding:0rem;
+    border:1px solid var(--forge-theme-outline);
+    border-radius: 4px;
+    margin-bottom:1rem;
+}
+
+.contactBtn {
+    --forge-card-padding:0.5rem 1rem;
+    --forge-card-shape:999px;
+    --forge-card-background:var(--forge-theme-primary);
+    margin-bottom:1rem;
+}
+
+.incomingMessages {
+    margin-top:0rem;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap:10px;
+}
+
+.message-header p {
+    flex-grow: 1;
+}
+
+/* Toggle button styles */
+.toggle-container {
+    display: flex;
+    margin: 2rem 0;
+    gap: 1rem;
+}
+
+.toggle-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--forge-theme-primary);
+    background-color: white;
+    color: var(--forge-theme-primary);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Roboto';
+    letter-spacing: 1px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.active-toggle {
+    background-color: var(--forge-theme-primary);
+    color: white;
+}
+
+.paginationControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tableFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    font-size: 14px;
+}

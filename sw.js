@@ -6,6 +6,8 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/new_order.html',
+  '/transaction_history.html',
+  '/mailroom.html',
   '/styles.css',
   '/scripts.js',
   '/manifest.json',

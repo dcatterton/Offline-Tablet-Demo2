@@ -1361,3 +1361,4 @@ if ('serviceWorker' in navigator) {
     document.body.classList.add('is-offline');
   }
 }
+

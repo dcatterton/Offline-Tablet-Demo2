@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Replace your existing <head> section with this one -->
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tyler Inmate System – Transaction History</title>
+    
+        <!-- PWA support -->
+        <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2196F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Inmate App">
+
+<!-- Add our PWA helper script early -->
+<script src="pwa-helper.js"></script>
+    
+        <!-- Fallback favicon -->
+        <link rel="shortcut icon"
+            href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg=="
+            type="image/png">
+    
+        <!-- Versioned CSS to force browser to load new versions -->
+        <link rel="stylesheet" href="styles.css?v=1.0.1"> <!-- Increment version when styles change -->
+        
+        <!-- Preload critical forge resources -->
+        <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" as="style">
+        <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js" as="script">
+        
+        <!-- External stylesheets with cache busting -->
+        <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css">
+        <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css">
+        
+        <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+    
+        <!-- Inline critical CSS for faster initial render -->
+        <style>
+            /* Critical styles for immediate display */
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+    
+    
+            /* Loading spinner for loading state */
+            .loading-spinner {
+                display: none;
+                width: 40px;
+                height: 40px;
+                margin: 100px auto;
+                border: 4px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top: 4px solid #2196F3;
+                animation: spin 1s linear infinite;
+            }
+    
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+    
+            /* Show spinner when offline detection is working */
+            body.is-offline .main-content {
+                display: none;
+            }
+    
+            body.is-offline .loading-spinner {
+                display: block;
+            }
+            
+            /* Force style refresh prevention */
+            .prevent-flicker {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.3s ease-in;
+            }
+            
+            .content-loaded {
+                visibility: visible;
+                opacity: 1;
+            }
+        </style>
+        
+        <!-- Script to prevent FOUC (Flash of Unstyled Content) -->
+        <script>
+            // Add class to prevent flicker during page load
+            document.documentElement.classList.add('prevent-flicker');
+            
+            // Mark content as loaded once stylesheets are loaded
+            window.addEventListener('load', function() {
+                document.documentElement.classList.add('content-loaded');
+                
+                // Cache the timestamp of when this version loaded (for debugging)
+                localStorage.setItem('app_last_loaded', new Date().toISOString());
+            });
+            
+            // Force load if taking too long (safety measure)
+            setTimeout(function() {
+                document.documentElement.classList.add('content-loaded');
+            }, 2000);
+        </script>
+    </head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body-left" class="leftMenu">
+            <forge-card class="menuCard">
+                <p class="forge-typography--heading1 menuHeader">Inmate menu</p>
+                <div style="padding:0 1rem 1rem 1rem;">
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Jail:</span> Tyler Demo Facility</p>
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Inmate:</span> Gerald Alderman</p>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="currentBalance">
+                            <p class="forge-typography--heading1 noMargin">Current balance:</p>
+                            <p class="forge-typography--heading1 noMargin" id="inmateBalance">$752.92</p>
+                        </div>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                        <forge-button-area>
+                            <button slot="button" aria-labelledby="button-heading"></button>
+                            <div class="content">
+                                <forge-icon external external-type="extended" slot="start" role="img" name="menu"
+                                    aria-label="A heart graphic"></forge-icon>
+                                <p class="forge-typography--heading1">Main menu</p>
+                            </div>
+                        </forge-button-area>
+                    </a>
+                    </forge-card>
+                </div>
+            </forge-card>
+        </div>
+        <div slot="body" class="rightBody">
+            <div class="transactionsContainer">
+                <p class="forge-typography--heading1 itemsHeader">Transaction history</p>
+                <div style="padding:1rem">
+                    <forge-table class="transactionTable"></forge-table>
+                </div>
+
+
+
+            </div>
+
+        </div>
+
+        <!-- <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_up"
+                            aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_down"
+                            aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div> -->
+    </forge-scaffold>
+
+    <script>
+        // Force service worker registration
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(registration => {
+                console.log('ServiceWorker registration successful with scope:', registration.scope);
+              })
+              .catch(error => {
+                console.error('ServiceWorker registration failed:', error);
+              });
+          });
+        }
+      </script>
+      
+<script>
+// Wait for the document to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize the Forge table
+  const table = document.querySelector('forge-table');
+  
+  // Sample transaction data with required types
+  const rawTransactions = [
+  { type: 'Paid - Inmate Fee - Bond - County Court #3', date: '01/31/2025', netAmount: -25.00, runningTotal: 796.85 },
+    { type: 'Applied Inmate Fee - Bond - County Court #3', date: '01/31/2025', netAmount: 0.00, runningTotal: 821.85 },
+    { type: 'Applied Inmate Fee - Bond - County Court #3', date: '01/31/2025', netAmount: 0.00, runningTotal: 821.85 },
+    { type: 'Bonding - Deposit - Credit Card', date: '01/31/2025', netAmount: 25.00, runningTotal: 821.85 },
+    { type: 'Video Chat', date: '01/29/2025', netAmount: -0.11, runningTotal: 796.85 },
+    { type: 'Tablet Time', date: '01/27/2025', netAmount: -0.13, runningTotal: 796.96 },
+    { type: 'Paid - Inmate Fee - Misc Property Damage', date: '01/22/2025', netAmount: -20.00, runningTotal: 797.09 },
+    { type: 'Applied Inmate Fee - Misc Property Damage', date: '01/22/2025', netAmount: 0.00, runningTotal: 817.09 },
+    { type: 'Deposit - Credit Card', date: '01/22/2025', netAmount: 50.00, runningTotal: 817.09 },
+    { type: 'Order', date: '01/18/2025', netAmount: -5.33, runningTotal: 767.09 },
+    { type: 'Video Chat', date: '01/15/2025', netAmount: -0.10, runningTotal: 772.42 },
+    { type: 'Video Chat', date: '01/15/2025', netAmount: -0.10, runningTotal: 772.52 },
+    { type: 'Video Chat', date: '01/14/2025', netAmount: -0.10, runningTotal: 772.62 },
+    { type: 'Tablet Time', date: '01/14/2025', netAmount: -0.06, runningTotal: 772.72 },
+    { type: 'Order', date: '01/14/2025', netAmount: -5.33, runningTotal: 772.78 },
+    { type: 'Outgoing Email Fee - Text Message', date: '01/08/2025', netAmount: -0.53, runningTotal: 778.11 },
+    { type: 'Video Chat', date: '01/08/2025', netAmount: -0.30, runningTotal: 778.64 },
+    { type: 'Order', date: '01/08/2025', netAmount: -4.68, runningTotal: 778.94 },
+    { type: 'Deposit - Credit Card', date: '01/08/2025', netAmount: 50.00, runningTotal: 783.62 },
+    { type: 'Payroll Payment', date: '01/06/2025', netAmount: 2.00, runningTotal: 733.62 },
+    { type: 'Order', date: '01/06/2025', netAmount: -108.00, runningTotal: 731.62 },
+    { type: 'Deposit - Credit Card', date: '01/06/2025', netAmount: 375.00, runningTotal: 839.62 },
+    { type: 'Video Chat', date: '01/06/2025', netAmount: -0.20, runningTotal: 464.62 },
+    { type: 'Video Chat', date: '01/06/2025', netAmount: -0.10, runningTotal: 464.82 },
+    { type: 'Outgoing Email Fee - Text Message', date: '01/06/2025', netAmount: -0.53, runningTotal: 464.92 },
+    { type: 'Video Chat', date: '01/06/2025', netAmount: -0.20, runningTotal: 465.45 }
+  ];
+  
+  // Use a completely manual table with custom HTML instead of forge-table
+  if (!table) {
+    console.error("Could not find forge-table element");
+    return;
+  }
+  
+  // Create a standard HTML table as a fallback solution
+  const tableContainer = document.querySelector('.transactionsContainer div');
+  if (!tableContainer) {
+    console.error("Could not find table container");
+    return;
+  }
+  
+  // Remove the forge-table element
+  table.remove();
+  
+  // Create a simple HTML table
+  const htmlTable = document.createElement('table');
+  htmlTable.style.width = '100%';
+  htmlTable.style.borderCollapse = 'collapse';
+  
+  // Create header
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  
+  // Add header cells
+  ['Type', 'Date', 'Net Amount', 'Running Total'].forEach(header => {
+    const th = document.createElement('th');
+    th.textContent = header;
+    th.style.padding = '12px';
+    th.style.textAlign = header === 'Net Amount' || header === 'Running Total' ? 'right' : 'left';
+    th.style.borderBottom = '1px solid #ccc';
+    th.style.backgroundColor = '#f0f0f0';
+    headerRow.appendChild(th);
+  });
+  
+  thead.appendChild(headerRow);
+  htmlTable.appendChild(thead);
+  
+  // Create tbody
+  const tbody = document.createElement('tbody');
+  
+  // Add data rows
+  rawTransactions.forEach((transaction, index) => {
+    const row = document.createElement('tr');
+    
+    // Add cells
+    const netAmount = parseFloat(transaction.netAmount);
+    const runningTotal = parseFloat(transaction.runningTotal);
+    
+    // Type cell
+    const typeCell = document.createElement('td');
+    typeCell.textContent = transaction.type;
+    typeCell.style.padding = '12px';
+    typeCell.style.borderBottom = '1px solid #eee';
+    
+    // Date cell
+    const dateCell = document.createElement('td');
+    dateCell.textContent = transaction.date;
+    dateCell.style.padding = '12px';
+    dateCell.style.borderBottom = '1px solid #eee';
+    
+    // Net Amount cell
+    const netAmountCell = document.createElement('td');
+    netAmountCell.textContent = (netAmount < 0 ? '-$' : '$') + Math.abs(netAmount).toFixed(2);
+    netAmountCell.style.padding = '12px';
+    netAmountCell.style.textAlign = 'right';
+    netAmountCell.style.borderBottom = '1px solid #eee';
+    if (netAmount < 0) {
+      netAmountCell.style.color = 'red';
+    }
+    
+    // Running Total cell
+    const runningTotalCell = document.createElement('td');
+    runningTotalCell.textContent = (runningTotal < 0 ? '-$' : '$') + Math.abs(runningTotal).toFixed(2);
+    runningTotalCell.style.padding = '12px';
+    runningTotalCell.style.textAlign = 'right';
+    runningTotalCell.style.borderBottom = '1px solid #eee';
+    if (runningTotal < 0) {
+      runningTotalCell.style.color = 'red';
+    }
+    
+    // Add zebra striping
+    if (index % 2 === 1) {
+      row.style.backgroundColor = '#f9f9f9';
+    }
+    
+    // Add all cells to the row
+    row.appendChild(typeCell);
+    row.appendChild(dateCell);
+    row.appendChild(netAmountCell);
+    row.appendChild(runningTotalCell);
+    
+    // Add the row to the tbody
+    tbody.appendChild(row);
+  });
+  
+  htmlTable.appendChild(tbody);
+  
+  // Add the HTML table to the container
+  tableContainer.appendChild(htmlTable);
+  
+  // Update the displayed balance with the latest running total
+  const balanceElement = document.getElementById('inmateBalance');
+  if (balanceElement && rawTransactions.length > 0) {
+    const balanceValue = rawTransactions[0].runningTotal;
+    const balanceNum = parseFloat(balanceValue);
+    balanceElement.textContent = (balanceNum < 0 ? '-$' : '$') + Math.abs(balanceNum).toFixed(2);
+  }
+});
+
+
+  </script>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>

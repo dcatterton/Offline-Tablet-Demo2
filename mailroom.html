@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Replace your existing <head> section with this one -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyler Inmate System – Mailroom</title>
+
+    <!-- PWA support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Inmate App">
+
+    <!-- Add our PWA helper script early -->
+    <script src="pwa-helper.js"></script>
+
+    <!-- Fallback favicon -->
+    <link rel="shortcut icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg=="
+        type="image/png">
+
+    <!-- Versioned CSS to force browser to load new versions -->
+    <link rel="stylesheet" href="styles.css?v=1.0.1"> <!-- Increment version when styles change -->
+
+    <!-- Preload critical forge resources -->
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" as="style">
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js" as="script">
+
+    <!-- External stylesheets with cache busting -->
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css">
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css">
+
+    <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+
+    <!-- Inline critical CSS for faster initial render -->
+    <style>
+        /* Critical styles for immediate display */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+
+        /* Loading spinner for loading state */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #2196F3;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Show spinner when offline detection is working */
+        body.is-offline .main-content {
+            display: none;
+        }
+
+        body.is-offline .loading-spinner {
+            display: block;
+        }
+
+        /* Force style refresh prevention */
+        .prevent-flicker {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        .content-loaded {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <!-- Script to prevent FOUC (Flash of Unstyled Content) -->
+    <script>
+        // Add class to prevent flicker during page load
+        document.documentElement.classList.add('prevent-flicker');
+
+        // Mark content as loaded once stylesheets are loaded
+        window.addEventListener('load', function () {
+            document.documentElement.classList.add('content-loaded');
+
+            // Cache the timestamp of when this version loaded (for debugging)
+            localStorage.setItem('app_last_loaded', new Date().toISOString());
+        });
+
+        // Force load if taking too long (safety measure)
+        setTimeout(function () {
+            document.documentElement.classList.add('content-loaded');
+        }, 2000);
+    </script>
+</head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body-left" class="leftMenu">
+            <forge-card class="menuCard">
+                <p class="forge-typography--heading1 menuHeader">Inmate menu</p>
+                <div style="padding:0 1rem 1rem 1rem;">
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Jail:</span> Tyler Demo Facility</p>
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Inmate:</span> Gerald Alderman</p>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="currentBalance">
+                            <p class="forge-typography--heading1 noMargin">Current balance:</p>
+                            <p class="forge-typography--heading1 noMargin" id="inmateBalance">$752.92</p>
+                        </div>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img" name="menu"
+                                        aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Main menu</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="email_send" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">New email</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="cellphone_message" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">New text msg</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="contacts" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Contact list</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="message_arrow_right" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Send internal msg</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                </div>
+            </forge-card>
+        </div>
+        <div slot="body" class="rightBody">
+            <!-- Replace the entire contents of the "rightBody" div with this code -->
+            <!-- REPLACE THE CURRENT TOGGLE AND MESSAGE CONTAINERS WITH THIS SIMPLIFIED VERSION -->
+<div class="mailroomContainer">
+    <p class="forge-typography--heading1 itemsHeader">Inmate – Mailroom</p>
+    <div style="padding:1rem">
+        <p class="forge-typography--subheading2">Recent contacts</p>
+        <forge-stack inline gap="16">
+            <forge-card class="contactBtn">
+                <a href="/index.html">
+                    <forge-button-area>
+                        <button slot="button" aria-labelledby="button-heading"></button>
+                        <div class="content">
+                            <p class="forge-typography--heading1">(615) 767-3349</p>
+                        </div>
+                    </forge-button-area>
+                </a>
+            </forge-card>
+            <forge-card class="contactBtn">
+                <a href="/index.html">
+                    <forge-button-area>
+                        <button slot="button" aria-labelledby="button-heading"></button>
+                        <div class="content">
+                            <p class="forge-typography--heading1">(951) 544-2328</p>
+                        </div>
+                    </forge-button-area>
+                </a>
+            </forge-card>
+            <forge-card class="contactBtn">
+                <a href="/index.html">
+                    <forge-button-area>
+                        <button slot="button" aria-labelledby="button-heading"></button>
+                        <div class="content">
+                            <p class="forge-typography--heading1">jack.stein@tylertech.com</p>
+                        </div>
+                    </forge-button-area>
+                </a>
+            </forge-card>
+        </forge-stack>
+        <forge-divider></forge-divider>
+        
+        <!-- Simple toggle buttons instead of forge-button-toggle-group -->
+        <div class="toggle-container">
+            <button id="incomingBtn" class="toggle-btn active-toggle">Incoming messages</button>
+            <button id="outgoingBtn" class="toggle-btn">Outgoing messages</button>
+        </div>
+        
+        <!-- Incoming messages container - initially visible -->
+        <div id="incomingContainer" class="message-container">
+            <div class="message-header">
+                <p class="forge-typography--subheading2">Incoming messages - Inbox</p>
+                <forge-button variant="filled" dense>Move selected</forge-button>
+                <forge-button variant="filled" dense>Add folder</forge-button>
+                <forge-button variant="filled" dense>Manage folders</forge-button>
+            </div>
+            
+            <div class="tableContainer">
+                <forge-table id="incomingTable" select="true" allow-row-click="true"></forge-table>
+                
+                <div class="tableFooter">
+                    <div class="paginationControls">
+                        <span>Show</span>
+                        <forge-select id="incomingPageSize" dense>
+                            <select slot="select">
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                            </select>
+                        </forge-select>
+                        <span>entries</span>
+                    </div>
+                    
+                    <div class="pagination">
+                        <forge-button dense variant="outlined">First</forge-button>
+                        <forge-button dense variant="outlined">Previous</forge-button>
+                        <forge-button dense variant="filled">1</forge-button>
+                        <forge-button dense variant="outlined">Next</forge-button>
+                        <forge-button dense variant="outlined">Last</forge-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Outgoing messages container - initially hidden -->
+        <div id="outgoingContainer" class="message-container" style="display: none;">
+            <div class="message-header">
+                <p class="forge-typography--subheading2">Outgoing messages - Sent</p>
+                <forge-button variant="filled" dense>Move selected</forge-button>
+                <forge-button variant="filled" dense>Add folder</forge-button>
+                <forge-button variant="filled" dense>Manage folders</forge-button>
+            </div>
+            
+            <div class="tableContainer">
+                <forge-table id="outgoingTable" select="true" allow-row-click="true"></forge-table>
+                
+                <div class="tableFooter">
+                    <div class="paginationControls">
+                        <span>Show</span>
+                        <forge-select id="outgoingPageSize" dense>
+                            <select slot="select">
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </forge-select>
+                        <span>entries</span>
+                    </div>
+                    
+                    <div class="pagination">
+                        <forge-button dense variant="outlined">First</forge-button>
+                        <forge-button dense variant="outlined">Previous</forge-button>
+                        <forge-button dense variant="filled">1</forge-button>
+                        <forge-button dense variant="outlined">Next</forge-button>
+                        <forge-button dense variant="outlined">Last</forge-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+
+        <!-- <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_up"
+                            aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_down"
+                            aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div> -->
+    </forge-scaffold>
+
+
+    <script>
+        // Force service worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+
+    <script>
+        // Wait for the document to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM content loaded - Setting up simple toggle');
+  
+  // Find the buttons for toggling between incoming and outgoing messages
+  const incomingBtn = document.getElementById('incomingBtn');
+  const outgoingBtn = document.getElementById('outgoingBtn');
+  
+  // Find the containers for each type of message
+  const incomingContainer = document.getElementById('incomingContainer');
+  const outgoingContainer = document.getElementById('outgoingContainer');
+  
+  if (!incomingBtn || !outgoingBtn) {
+    console.error('Toggle buttons not found');
+    return;
+  }
+  
+  if (!incomingContainer || !outgoingContainer) {
+    console.error('Message containers not found');
+    return;
+  }
+  
+  console.log('Toggle components found, setting up event listeners');
+  
+  // Set up click handlers for the toggle buttons
+  incomingBtn.addEventListener('click', () => {
+    console.log('Incoming button clicked');
+    // Show incoming, hide outgoing
+    incomingContainer.style.display = 'block';
+    outgoingContainer.style.display = 'none';
+    
+    // Update button styles
+    incomingBtn.classList.add('active-toggle');
+    outgoingBtn.classList.remove('active-toggle');
+    
+    // Initialize tables if needed
+    if (!incomingTableInitialized) {
+      initializeIncomingTable();
+      incomingTableInitialized = true;
+    }
+  });
+  
+  outgoingBtn.addEventListener('click', () => {
+    console.log('Outgoing button clicked');
+    // Show outgoing, hide incoming
+    outgoingContainer.style.display = 'block';
+    incomingContainer.style.display = 'none';
+    
+    // Update button styles
+    outgoingBtn.classList.add('active-toggle');
+    incomingBtn.classList.remove('active-toggle');
+    
+    // Initialize tables if needed
+    if (!outgoingTableInitialized) {
+      initializeOutgoingTable();
+      outgoingTableInitialized = true;
+    }
+  });
+  
+  // Track if tables have been initialized
+  let incomingTableInitialized = false;
+  let outgoingTableInitialized = false;
+  
+  // Initialize the incoming table on page load
+  initializeIncomingTable();
+  incomingTableInitialized = true;
+  
+  // Set initial state
+  incomingContainer.style.display = 'block';
+  outgoingContainer.style.display = 'none';
+  incomingBtn.classList.add('active-toggle');
+  
+  // Initialize the clock in the header
+  const clockElement = document.getElementById('clock');
+  if (clockElement) {
+    updateClock();
+    setInterval(updateClock, 1000);
+  }
+});
+
+// Function to initialize the incoming messages table
+function initializeIncomingTable() {
+  console.log('Initializing incoming table');
+  const table = document.getElementById('incomingTable');
+  
+  if (!table) {
+    console.error('Could not find incoming table element');
+    return;
+  }
+  
+  // Sample data for incoming messages
+  const messages = [
+    { 
+      date: '01/08/2025 10:04 am', 
+      from: 'Jack Stein', 
+      subject: '[Confidential]', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/06/2025 12:18 pm', 
+      from: 'Your bro', 
+      subject: 'No more', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/06/2025 09:02 am', 
+      from: 'Mail Delivery', 
+      subject: 'Delivered Mail 📧', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/06/2025 09:02 am', 
+      from: 'Mail Delivery', 
+      subject: 'Delivered Mail 📧', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/06/2025 09:02 am', 
+      from: 'Mail Delivery', 
+      subject: 'Delivered Mail 📧', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/05/2025 15:29:07 pm', 
+      from: 'Automated Message', 
+      subject: 'Delivery Failure: 15208181888', 
+      charge: '$0.00' 
+    }
+  ];
+  
+  // Configure table columns
+  table.columnConfigurations = [
+    { 
+      property: 'select',
+      header: '',
+      width: '0px'
+    },
+    { 
+      property: 'date', 
+      header: 'Date',
+      sortable: true
+    },
+    { 
+      property: 'from', 
+      header: 'From',
+      sortable: true
+    },
+    { 
+      property: 'subject', 
+      header: 'Subject',
+      sortable: true
+    },
+    { 
+      property: 'charge', 
+      header: 'Charge',
+      sortable: true,
+      alignment: 'right'
+    }
+  ];
+  
+  // Add the data to the table
+  table.data = messages;
+}
+
+// Function to initialize the outgoing messages table
+function initializeOutgoingTable() {
+  console.log('Initializing outgoing table');
+  const table = document.getElementById('outgoingTable');
+  
+  if (!table) {
+    console.error('Could not find outgoing table element');
+    return;
+  }
+  
+  // Sample data for outgoing messages
+  const messages = [
+    { 
+      date: '01/08/2025 10:27 am', 
+      recipient: '16157673349', 
+      subject: 'txt message', 
+      charge: '$0.53' 
+    },
+    { 
+      date: '01/06/2025 12:13 pm', 
+      recipient: '19515442328', 
+      subject: 'txt message', 
+      charge: '$0.53' 
+    },
+    { 
+      date: '01/05/2025 15:29 pm', 
+      recipient: '15208181888', 
+      subject: 'txt message', 
+      charge: '$0.00' 
+    },
+    { 
+      date: '01/05/2025 15:25 pm', 
+      recipient: 'jack.stein@tylertech.com', 
+      subject: '[Confidential]', 
+      charge: '$0.50' 
+    }
+  ];
+  
+  // Configure table columns
+  table.columnConfigurations = [
+    { 
+      property: 'select',
+      header: '',
+      width: '0px'
+    },
+    { 
+      property: 'date', 
+      header: 'Date',
+      sortable: true
+    },
+    { 
+      property: 'recipient', 
+      header: 'Recipient',
+      sortable: true
+    },
+    { 
+      property: 'subject', 
+      header: 'Subject',
+      sortable: true
+    },
+    { 
+      property: 'charge', 
+      header: 'Charge',
+      sortable: true,
+      alignment: 'right'
+    }
+  ];
+  
+  // Add the data to the table
+  table.data = messages;
+}
+    </script>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
