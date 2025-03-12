@@ -346,21 +346,6 @@
 
 
     <script>
-        // Force service worker registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('ServiceWorker registration failed:', error);
-                    });
-            });
-        }
-    </script>
-
-    <script>
         // Wait for the document to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM content loaded - Setting up simple toggle');
@@ -599,6 +584,22 @@ function initializeOutgoingTable() {
     </script>
 
     <script src="scripts.js"></script>
+
+
+    <script>
+        // Force service worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>
