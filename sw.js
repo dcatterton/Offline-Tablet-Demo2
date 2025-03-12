@@ -12,6 +12,7 @@ const PRECACHE_URLS = [
   '/scripts.js',
   '/manifest.json',
   '/offline.html',
+  '/pwa-helper.js',
   'https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css',
   'https://cdn.forge.tylertech.com/v1/css/tyler-font.css',
   'https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js',
