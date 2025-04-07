@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Replace your existing <head> section with this one -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyler Inmate System – Mailroom</title>
+
+    <!-- PWA support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Inmate App">
+
+    <!-- Add our PWA helper script early -->
+    <script src="pwa-helper.js"></script>
+
+    <!-- Fallback favicon -->
+    <link rel="shortcut icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg=="
+        type="image/png">
+
+    <!-- Versioned CSS to force browser to load new versions -->
+    <link rel="stylesheet" href="styles.css?v=1.0.1"> <!-- Increment version when styles change -->
+
+    <!-- Preload critical forge resources -->
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" as="style">
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js" as="script">
+
+    <!-- External stylesheets with cache busting -->
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css">
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css">
+
+    <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+
+    <!-- Inline critical CSS for faster initial render -->
+    <style>
+        /* Critical styles for immediate display */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+
+        /* Loading spinner for loading state */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #2196F3;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Show spinner when offline detection is working */
+        body.is-offline .main-content {
+            display: none;
+        }
+
+        body.is-offline .loading-spinner {
+            display: block;
+        }
+
+        /* Force style refresh prevention */
+        .prevent-flicker {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        .content-loaded {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <!-- Script to prevent FOUC (Flash of Unstyled Content) -->
+    <script>
+        // Add class to prevent flicker during page load
+        document.documentElement.classList.add('prevent-flicker');
+
+        // Mark content as loaded once stylesheets are loaded
+        window.addEventListener('load', function () {
+            document.documentElement.classList.add('content-loaded');
+
+            // Cache the timestamp of when this version loaded (for debugging)
+            localStorage.setItem('app_last_loaded', new Date().toISOString());
+        });
+
+        // Force load if taking too long (safety measure)
+        setTimeout(function () {
+            document.documentElement.classList.add('content-loaded');
+        }, 2000);
+    </script>
+</head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body-left" class="leftMenu">
+            <forge-card class="menuCard">
+                <p class="forge-typography--heading1 menuHeader">Inmate menu</p>
+                <div style="padding:0 1rem 1rem 1rem;">
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Jail:</span> Tyler Demo Facility</p>
+                    <p class="forge-typography--heading1"><span style="color:var(--forge-theme-text-medium)"
+                            class="forge-typography--subheading1">Inmate:</span> Gerald Alderman</p>
+                    <forge-card style="margin-bottom:1rem;">
+                        <div class="currentBalance">
+                            <p class="forge-typography--heading1 noMargin">Current balance:</p>
+                            <p class="forge-typography--heading1 noMargin" id="inmateBalance">$752.92</p>
+                        </div>
+                    </forge-card>
+                    <forge-card class="actionBtn">
+                        <a href="/index.html">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img" name="menu"
+                                        aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">Main menu</p>
+                                </div>
+                            </forge-button-area>
+                        </a>
+                    </forge-card>
+                    <forge-card class="actionBtn newGrievance">
+                            <forge-button-area>
+                                <button slot="button" aria-labelledby="button-heading"></button>
+                                <div class="content">
+                                    <forge-icon external external-type="extended" slot="start" role="img"
+                                        name="email_send" aria-label="A heart graphic"></forge-icon>
+                                    <p class="forge-typography--heading1">New grievance</p>
+                                </div>
+                            </forge-button-area>
+                    </forge-card>
+                </div>
+            </forge-card>
+        </div>
+        <div slot="body" class="rightBody">
+            <!-- Replace the entire contents of the "rightBody" div with this code -->
+            <!-- REPLACE THE CURRENT TOGGLE AND MESSAGE CONTAINERS WITH THIS SIMPLIFIED VERSION -->
+            <div class="grievanceContainer">
+                <p class="forge-typography--heading1 itemsHeader">Inmate – Grievance System</p>
+                <!-- Replace the empty div inside grievanceContainer with this content -->
+<div style="padding:1rem">
+    <!-- Open Grievances Section -->
+    <forge-card>
+        <div class="grievance-section">
+            <h2 class="forge-typography--heading3 grievance-header">Open Grievances</h2>
+            
+            <forge-table id="openGrievancesTable" class="grievance-table"></forge-table>
+            
+            <div class="table-controls">
+                <div class="entries-control">
+                    <span class="forge-typography--body1">Show</span>
+                    <forge-select id="openTablePageSize" name="open-page-size" density="small" value="25">
+                        <forge-option value="25" selected>25</forge-option>
+                        <forge-option value="50">50</forge-option>
+                        <forge-option value="100">100</forge-option>
+                    </forge-select>
+                    <span class="forge-typography--body1">entries</span>
+                </div>
+                
+                <div class="pagination">
+                    <forge-button variant="text" disabled>First</forge-button>
+                    <forge-button variant="text" disabled>Previous</forge-button>
+                    <forge-button variant="contained" class="active">1</forge-button>
+                    <forge-button variant="text">Next</forge-button>
+                    <forge-button variant="text">Last</forge-button>
+                </div>
+            </div>
+            
+        </div>
+    </forge-card>
+    
+    <!-- Closed Grievances Section -->
+    <forge-card style="margin-top: 1.5rem;">
+        <div class="grievance-section">
+            <h2 class="forge-typography--heading3 grievance-header">Closed Grievances</h2>
+            
+            <forge-table id="closedGrievancesTable" class="grievance-table"></forge-table>
+            
+            <div class="table-controls">
+                <div class="entries-control">
+                    <span class="forge-typography--body1">Show</span>
+                    <forge-select id="closedTablePageSize" name="closed-page-size" density="small" value="25">
+                        <forge-option value="25" elected="selected">25</forge-option>
+                        <forge-option value="50">50</forge-option>
+                        <forge-option value="100">100</forge-option>
+                    </forge-select>
+                    <span class="forge-typography--body1">entries</span>
+                </div>
+                
+                <div class="pagination">
+                    <forge-button variant="text" disabled>First</forge-button>
+                    <forge-button variant="text" disabled>Previous</forge-button>
+                    <forge-button variant="contained" class="active">1</forge-button>
+                    <forge-button variant="text">Next</forge-button>
+                    <forge-button variant="text">Last</forge-button>
+                </div>
+            </div>
+        </div>
+    </forge-card>
+</div>
+
+        </div>
+
+        <!-- Add this HTML to your page for the grievance detail dialog -->
+<forge-dialog id="grievanceDetailDialog">
+    <forge-scaffold>
+      <!-- Header with title and close button -->
+      <forge-toolbar slot="header">
+        <h1 class="forge-typography--heading4" id="dialog-title" slot="start">
+          Outgoing Grievance Detail
+        </h1>
+        <forge-icon-button slot="end" aria-label="Close dialog" id="close-dialog-button">
+          <forge-icon name="close"></forge-icon>
+        </forge-icon-button>
+      </forge-toolbar>
+  
+      <!-- Dialog content -->
+      <div slot="body" class="grievance-detail-content">
+        <div class="detail-row">
+          <span class="detail-label">ID:</span>
+          <span id="detail-id" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date Added:</span>
+          <span id="detail-date" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Subject:</span>
+          <span id="detail-subject" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Grievance:</span>
+          <div id="detail-grievance" class="detail-value-full-width"></div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Notes:</span>
+          <div id="detail-notes" class="detail-value-full-width"></div>
+        </div>
+      </div>
+      
+      <!-- Footer with OK button -->
+      <forge-toolbar slot="footer" inverted>
+        <forge-button slot="end" variant="raised" id="detail-ok-button">Ok</forge-button>
+      </forge-toolbar>
+    </forge-scaffold>
+  </forge-dialog>
+
+  <!-- Add this HTML to your page for the Terms & Conditions dialog -->
+<forge-dialog id="termsConditionsDialog">
+    <forge-scaffold>
+      <!-- Header with title and close button -->
+      <forge-toolbar slot="header">
+        <h1 class="forge-typography--heading4" id="terms-dialog-title" slot="start">
+          Grievance System Terms & Conditions
+        </h1>
+        <forge-icon-button slot="end" aria-label="Close dialog" id="terms-close-button">
+          <forge-icon name="close"></forge-icon>
+        </forge-icon-button>
+      </forge-toolbar>
+  
+      <!-- Dialog content -->
+      <div slot="body" class="terms-content">
+        <p class="forge-typography--body2">
+          You are entering the module to submit grievances to staff. 
+          Grievances are taken seriously. Please note you are only 
+          permitted to submit three grievances in a week. Do not 
+          abuse this feature.
+        </p>
+      </div>
+      
+      <!-- Footer with accept/decline buttons -->
+      <forge-toolbar slot="footer" inverted>
+        <div class="terms-button-container" slot="end">
+          <forge-button id="decline-button" variant="text">Decline</forge-button>
+          <forge-button id="accept-button" variant="raised" color="primary"><a href="new_grievance.html">I accept</a></forge-button>
+        </div>
+      </forge-toolbar>
+    </forge-scaffold>
+  </forge-dialog>
+
+        <!-- <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_up"
+                            aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_down"
+                            aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div> -->
+    </forge-scaffold>
+
+    <script>
+        // JavaScript for initializing and configuring the Forge Tables
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Open Grievances Table Data
+  const openGrievancesData = [
+    {id: '922363', date: '03/20/2025 09:44 am', subject: 'Appeal: I have a grievance regarding another inmate', status: 'New'},
+    {id: '902539', date: '01/29/2025 11:52 am', subject: 'I have a grievance', status: 'New'},
+    {id: '896727', date: '01/14/2025 11:54 am', subject: 'Fight with inmate on Monday', status: 'New'},
+    {id: '893478', date: '01/06/2025 15:26 pm', subject: 'Appeal: kitchen', status: 'New'},
+    {id: '893353', date: '01/06/2025 12:51 pm', subject: 'Appeal: Dep. Alan can not come to see at all', status: 'In Progress'},
+    {id: '892658', date: '01/04/2025 13:40 pm', subject: 'Grievance About Living Conditions', status: 'New'}
+  ];
+
+  // Closed Grievances Table Data
+  const closedGrievancesData = [
+    {id: '922352', date: '03/20/2025 09:35 am', subject: 'I have a grievance regarding another inmate', status: 'Resolved Unsubstantiated'},
+    {id: '920045', date: '03/14/2025 10:59 am', subject: 'Third Second Appeal: test for purpose of appeal', status: 'Resolved Unsubstantiated'},
+    {id: '920044', date: '03/14/2025 10:58 am', subject: 'Second Appeal: test for purpose of appeal', status: 'Resolved Unsubstantiated'},
+    {id: '920042', date: '03/14/2025 10:55 am', subject: 'Appeal: test for purpose of appeal', status: 'Resolved Unsubstantiated'},
+    {id: '920038', date: '03/14/2025 10:52 am', subject: 'test for purpose of appeal', status: 'Resolved Unsubstantiated'},
+    {id: '893465', date: '01/06/2025 15:12 pm', subject: 'kitchen', status: 'Resolved Unsubstantiated'},
+    {id: '893350', date: '01/06/2025 12:46 pm', subject: 'Dep. Alan can not come to see at all', status: 'Resolved Unsubstantiated'}
+  ];
+
+  // Initialize Open Grievances Table
+  initializeTable('openGrievancesTable', openGrievancesData);
+  
+  // Initialize Closed Grievances Table
+  initializeTable('closedGrievancesTable', closedGrievancesData);
+
+  // Configure page size selection
+  setupPageSizeSelectors();
+  
+  // Add tap instructions
+  setupInfoMessages();
+});
+
+function initializeTable(tableId, data) {
+  const tableElement = document.getElementById(tableId);
+  
+  if (!tableElement) {
+    console.error(`Table with ID ${tableId} not found.`);
+    return;
+  }
+  
+  // Set table data
+  tableElement.data = data;
+  
+  // Define column configurations
+  tableElement.columnConfigurations = [
+    {
+      property: 'id',
+      header: 'Id',
+      align: 'left',
+      width: '20%'
+    },
+    {
+      property: 'date',
+      header: 'Date',
+      width: '20%'
+    },
+    {
+      property: 'subject',
+      header: 'Subject',
+      width: '40%'
+    },
+    {
+      property: 'status',
+      header: 'Status',
+      width: '20%',
+      template: (rowIndex, container, rowData) => {
+        container.textContent = rowData.status;
+        
+        // Add appropriate styling based on status
+        if (rowData.status === 'New') {
+          container.style.color = 'var(--forge-theme-primary)';
+          container.style.fontWeight = '500';
+        } else if (rowData.status === 'In Progress') {
+          container.style.color = 'orange';
+          container.style.fontWeight = '500';
+        } else if (rowData.status.includes('Resolved')) {
+          container.style.color = 'green';
+          container.style.fontWeight = '500';
+        }
+        
+        return container;
+      }
+    }
+  ];
+  
+  // Set table attributes
+  tableElement.layoutType = 'fixed';
+  tableElement.wrapContent = true;
+  tableElement.roomy = true;
+  tableElement.allowRowClick = true;
+  
+  // Add row click listener
+  tableElement.addEventListener('forge-table-row-click', (event) => {
+    // In a real implementation, this would navigate to the detail view
+    console.log('Row clicked:', event.detail.data);
+  });
+  
+  // Render the table
+  tableElement.render();
+}
+
+function setupPageSizeSelectors() {
+  // Set up event listeners for page size selectors
+  const pageSizeSelectors = document.querySelectorAll('.page-size-selector');
+  
+  pageSizeSelectors.forEach(selector => {
+    selector.addEventListener('change', (event) => {
+      const tableId = event.target.getAttribute('data-table');
+      const tableElement = document.getElementById(tableId);
+      
+      if (tableElement) {
+        // In a real implementation, this would update the pagination
+        console.log(`Changed page size for ${tableId} to ${event.target.value}`);
+      }
+    });
+  });
+}
+
+function setupInfoMessages() {
+  // Set up tap instruction messages
+  const infoMessages = document.querySelectorAll('.info-message');
+  
+  infoMessages.forEach(message => {
+    message.addEventListener('click', (event) => {
+      if (event.target.tagName === 'A') {
+        event.preventDefault();
+        // In a real implementation, this would show more details
+        console.log('View more details clicked');
+      }
+    });
+  });
+}
+
+// Add this to your JavaScript file to handle the grievance detail dialog
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize dialog functionality
+  initializeDetailDialog();
+});
+
+function initializeDetailDialog() {
+  // Get dialog element
+  const dialog = document.getElementById('grievanceDetailDialog');
+  const okButton = document.getElementById('detail-ok-button');
+  const closeButton = document.getElementById('close-dialog-button');
+  const dialogTitle = document.getElementById('dialog-title');
+  
+  if (!dialog || !okButton || !closeButton || !dialogTitle) {
+    console.error('Dialog elements not found');
+    return;
+  }
+  
+  // Close dialog when OK button is clicked
+  okButton.addEventListener('click', () => {
+    dialog.hide();
+  });
+  
+  // Close dialog when close icon button is clicked
+  closeButton.addEventListener('click', () => {
+    dialog.hide();
+  });
+  
+  // Add click event listeners to both tables
+  const openGrievancesTable = document.getElementById('openGrievancesTable');
+  const closedGrievancesTable = document.getElementById('closedGrievancesTable');
+  
+  if (openGrievancesTable) {
+    openGrievancesTable.addEventListener('forge-table-row-click', (event) => {
+      showGrievanceDetail(event.detail.data, true);
+    });
+  }
+  
+  if (closedGrievancesTable) {
+    closedGrievancesTable.addEventListener('forge-table-row-click', (event) => {
+      showGrievanceDetail(event.detail.data, false);
+    });
+  }
+  
+  // Listen for the before-close event to handle closing via ESC key
+  dialog.addEventListener('forge-dialog-before-close', (event) => {
+    // Allow the dialog to close
+    return true;
+  });
+}
+
+// Sample grievance content data - in a real implementation, this would come from an API
+const grievanceContent = {
+  // Open grievances
+  '922363': { 
+    grievance: 'I am unhappy with the resolution',
+    notes: ''
+  },
+  '902539': {
+    grievance: 'The food portions are too small and I need more calories',
+    notes: 'Inmate has submitted multiple complaints about food portions'
+  },
+  '896727': {
+    grievance: 'An inmate assaulted me on Monday in the yard during exercise period',
+    notes: 'Investigating with security footage'
+  },
+  '893478': {
+    grievance: 'The kitchen staff is not providing my medically-required diet',
+    notes: 'Verifying with medical staff'
+  },
+  '893353': {
+    grievance: 'I have requested to speak with Deputy Alan multiple times and he has not responded',
+    notes: 'Dep. Alan on vacation until 01/10'
+  },
+  '892658': {
+    grievance: 'My cell is too cold and the blankets provided are insufficient',
+    notes: 'Maintenance checking HVAC system'
+  },
+  
+  // Closed grievances
+  '922352': {
+    grievance: 'Another inmate took my items during commissary distribution',
+    notes: 'Reviewed camera footage - no evidence found'
+  },
+  '920045': {
+    grievance: 'Test grievance for system testing - third appeal',
+    notes: 'This is a test entry'
+  },
+  '920044': {
+    grievance: 'Test grievance for system testing - second appeal',
+    notes: 'This is a test entry'
+  },
+  '920042': {
+    grievance: 'Test grievance for system testing',
+    notes: 'This is a test entry'
+  },
+  '920038': {
+    grievance: 'Test grievance for system testing',
+    notes: 'This is a test entry'
+  },
+  '893465': {
+    grievance: 'The kitchen staff is not providing my medically-required diet',
+    notes: 'Medical records do not indicate special diet requirement'
+  },
+  '893350': {
+    grievance: 'I have requested to speak with Deputy Alan multiple times and he has not responded',
+    notes: 'Deputy Alan met with inmate on 01/12'
+  }
+};
+
+function showGrievanceDetail(rowData, isOpen) {
+  // Get dialog element and detail fields
+  const dialog = document.getElementById('grievanceDetailDialog');
+  const dialogTitle = document.getElementById('dialog-title');
+  const idElement = document.getElementById('detail-id');
+  const dateElement = document.getElementById('detail-date');
+  const subjectElement = document.getElementById('detail-subject');
+  const grievanceElement = document.getElementById('detail-grievance');
+  const notesElement = document.getElementById('detail-notes');
+  
+  if (!dialog || !dialogTitle || !idElement || !dateElement || !subjectElement || !grievanceElement || !notesElement) {
+    console.error('Dialog elements not found');
+    return;
+  }
+  
+  // Set title based on whether it's an open or closed grievance
+  dialogTitle.textContent = isOpen ? 'Outgoing Grievance Detail' : 'Closed Grievance Detail';
+  
+  // Populate dialog with row data
+  idElement.textContent = rowData.id;
+  dateElement.textContent = rowData.date;
+  subjectElement.textContent = rowData.subject;
+  
+  // Get additional content from our sample data
+  const content = grievanceContent[rowData.id] || { grievance: 'No content available', notes: '' };
+  grievanceElement.textContent = content.grievance;
+  notesElement.textContent = content.notes;
+  
+  // Open the dialog
+  dialog.show();
+}
+
+// Function to initialize the Terms & Conditions dialog
+function initializeTermsDialog() {
+  // Get dialog elements
+  const termsDialog = document.getElementById('termsConditionsDialog');
+  const acceptButton = document.getElementById('accept-button');
+  const declineButton = document.getElementById('decline-button');
+  const closeButton = document.getElementById('terms-close-button');
+  
+  // Use the new class selector - this targets the button more precisely
+  const newGrievanceButton = document.querySelector('.actionBtn.newGrievance forge-button-area');
+  
+  if (!termsDialog || !acceptButton || !declineButton || !closeButton) {
+    console.error('Terms & Conditions dialog elements not found');
+    return;
+  }
+  
+  // Function to handle the new grievance button click
+  function handleNewGrievanceClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    termsDialog.show();
+  }
+  
+  // Add click event listener to the New Grievance button
+  if (newGrievanceButton) {
+    console.log('New Grievance button found, adding click listener');
+    newGrievanceButton.addEventListener('click', handleNewGrievanceClick);
+    
+    // Also add click listener to the button itself for better coverage
+    const actualButton = newGrievanceButton.querySelector('button');
+    if (actualButton) {
+      actualButton.addEventListener('click', handleNewGrievanceClick);
+    }
+  } else {
+    console.warn('New Grievance button not found.');
+  }
+  
+  // Handle accept button click
+  acceptButton.addEventListener('click', () => {
+    termsDialog.hide();
+    // Proceed to the new grievance form
+    navigateToNewGrievanceForm();
+  });
+  
+  // Handle decline button click
+  declineButton.addEventListener('click', () => {
+    termsDialog.hide();
+    // Stay on the current page, don't navigate
+  });
+  
+  // Handle close button click
+  closeButton.addEventListener('click', () => {
+    termsDialog.hide();
+    // Stay on the current page, don't navigate
+  });
+  
+  // Handle ESC key press
+  termsDialog.addEventListener('forge-dialog-before-close', (event) => {
+    // Allow the dialog to close
+    return true;
+  });
+}
+
+// Make sure to initialize the Terms & Conditions dialog after the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize the Terms & Conditions dialog
+  initializeTermsDialog();
+});
+
+// Function to navigate to the new grievance form page
+function navigateToNewGrievanceForm() {
+  // In a real implementation, this would navigate to the actual form page
+  // For now, we'll just simulate navigation
+  console.log('Navigating to new grievance form');
+  
+  window.location.href = '/new_grievance.html';
+  
+  // Or you could show another dialog for the form
+  showNewGrievanceForm();
+}
+
+// Function to check for and add pending grievances to the Open Grievances table
+function checkForPendingGrievance() {
+  const pendingGrievanceJSON = localStorage.getItem('pendingGrievance');
+  
+  if (!pendingGrievanceJSON) {
+    console.log('No pending grievance found');
+    return;
+  }
+  
+  try {
+    // Parse the pending grievance
+    const pendingGrievance = JSON.parse(pendingGrievanceJSON);
+    
+    // Add it to the Open Grievances table
+    addGrievanceToTable(pendingGrievance);
+    
+    // Add it to the grievance content data
+    addGrievanceToContentData(pendingGrievance);
+    
+    // Clear the pending grievance from localStorage
+    localStorage.removeItem('pendingGrievance');
+    
+    // Show confirmation toast
+    showConfirmationToast(pendingGrievance.id);
+    
+  } catch (error) {
+    console.error('Error processing pending grievance:', error);
+  }
+}
+
+// Function to add a grievance to the Open Grievances table
+function addGrievanceToTable(grievance) {
+  const openGrievancesTable = document.getElementById('openGrievancesTable');
+  
+  if (!openGrievancesTable) {
+    console.error('Open Grievances table not found');
+    return;
+  }
+  
+  // Create a new grievance row object compatible with the table's data format
+  const newGrievanceRow = {
+    id: grievance.id,
+    date: grievance.date,
+    subject: grievance.subject,
+    status: grievance.status
+  };
+  
+  // Get the current table data
+  const currentData = openGrievancesTable.data || [];
+  
+  // Add the new grievance to the beginning of the array
+  const updatedData = [newGrievanceRow, ...currentData];
+  
+  // Update the table data
+  openGrievancesTable.data = updatedData;
+  
+  // Re-render the table
+  openGrievancesTable.render();
+}
+
+// Function to add the grievance to the content data object for detail viewing
+function addGrievanceToContentData(grievance) {
+  // Add to the grievance content data
+  grievanceContent[grievance.id] = {
+    grievance: grievance.grievance,
+    notes: grievance.notes || '',
+    category: grievance.category
+  };
+}
+
+// Function to show a confirmation toast message
+function showConfirmationToast(id) {
+  // Create a toast element
+  const toast = document.createElement('div');
+  toast.className = 'grievance-toast';
+  toast.innerHTML = `
+    <div class="toast-content">
+      <forge-icon external external-type="extended" role="img" name="check_circle" aria-label="Success"></forge-icon>
+      <span>Grievance #${id} submitted successfully!</span>
+    </div>
+  `;
+  
+  // Style the toast
+  const toastStyle = document.createElement('style');
+  toastStyle.textContent = `
+    .grievance-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--forge-theme-primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      animation: slideIn 0.3s, fadeOut 0.5s 3.5s;
+      max-width: 400px;
+    }
+    
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .toast-content forge-icon {
+      color: white;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+  `;
+  
+  // Add the toast and style to the document
+  document.head.appendChild(toastStyle);
+  document.body.appendChild(toast);
+  
+  // Remove the toast after 4 seconds
+  setTimeout(() => {
+    toast.remove();
+    toastStyle.remove();
+  }, 4000);
+}
+
+// Check for pending grievances when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Add to the existing DOMContentLoaded event handler
+  setTimeout(() => {
+    checkForPendingGrievance();
+  }, 1000); // Small delay to ensure tables are initialized
+});
+    </script>
+
+
+    <script src="scripts.js"></script>
+
+
+    <script>
+        // Force service worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>

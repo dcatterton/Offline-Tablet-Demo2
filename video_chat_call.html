@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Replace your existing <head> section with this one -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyler Inmate System – Mailroom</title>
+
+    <!-- PWA support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Inmate App">
+
+    <!-- Add our PWA helper script early -->
+    <script src="pwa-helper.js"></script>
+
+    <!-- Fallback favicon -->
+    <link rel="shortcut icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAnFBMVEUiloAAAAAgkX0me20Vg3r///8Lc3D49vblz7oEc2Xh1cXOonnw7Oiurq7e39+UlJVBsZJra2v1+vjs9vXj7uNQtJbD4Nhxv6Rb0bqDs4AuoYaPx7ZEvKMTj3o7q5AWmYJEtJZ3zoNlx641rY47sJB/f38rKyvPz8+goKHC1r1ozbOXzbql0bs3NzdhYWEUFBRKSkpVVVXa2trQ4NMmJiZAhRVwAAAA30lEQVQ4y83PO26EMBQF0It5MJSIhpohDANCiiaT/W9tYTtxqoBUt7d4uucDh/MKE++03bTIGlGIWlhyRqZ0R6JWkCtaREO/KPowWBK1gpzRohuKUdZFyQmtWjcuuPXqVmPqRXHxAFldcF0u2LMm4LXTAmLJOyPgetC0QYNI8jXfMBiCIHjQ0dbZ/VbMgyAIgqGsqwxXeJJnOcdPAWuQ5zkCl+R5DnDXKLgsrxqHwOuZQVSzrpOVcRycV64TLiuuX5VEreGJOq4rO9AQGxpOX9TmA53Bhe0DuR4+HO1/fQFLABgUyTnDIQAAAABJRU5ErkJggg=="
+        type="image/png">
+
+    <!-- Versioned CSS to force browser to load new versions -->
+    <link rel="stylesheet" href="styles.css?v=1.0.1"> <!-- Increment version when styles change -->
+
+    <!-- Preload critical forge resources -->
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css" as="style">
+    <link rel="preload" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js" as="script">
+
+    <!-- External stylesheets with cache busting -->
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/forge.css">
+    <link rel="stylesheet" href="https://cdn.forge.tylertech.com/v1/css/tyler-font.css">
+
+    <script type="module" src="https://cdn.forge.tylertech.com/v1/libs/@tylertech/forge@3.6.4/index.js"></script>
+
+    <!-- Inline critical CSS for faster initial render -->
+    <style>
+        /* Critical styles for immediate display */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+
+        /* Loading spinner for loading state */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #2196F3;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Show spinner when offline detection is working */
+        body.is-offline .main-content {
+            display: none;
+        }
+
+        body.is-offline .loading-spinner {
+            display: block;
+        }
+
+        /* Force style refresh prevention */
+        .prevent-flicker {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        .content-loaded {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <!-- Script to prevent FOUC (Flash of Unstyled Content) -->
+    <script>
+        // Add class to prevent flicker during page load
+        document.documentElement.classList.add('prevent-flicker');
+
+        // Mark content as loaded once stylesheets are loaded
+        window.addEventListener('load', function () {
+            document.documentElement.classList.add('content-loaded');
+
+            // Cache the timestamp of when this version loaded (for debugging)
+            localStorage.setItem('app_last_loaded', new Date().toISOString());
+        });
+
+        // Force load if taking too long (safety measure)
+        setTimeout(function () {
+            document.documentElement.classList.add('content-loaded');
+        }, 2000);
+    </script>
+</head>
+
+<body>
+    <forge-scaffold class="scaffold-example">
+        <div slot="header">
+            <div class="logoHeader">
+                <img src="https://cdn.forge.tylertech.com/v1/images/branding/tyler/tyler-logo-white.svg"
+                    class="tylerLogo" />
+                <span id="clock" class="forge-typography--heading7"></span>
+            </div>
+        </div>
+        <div slot="body" style="padding:1rem;">
+            <div class="videoChatContainer">
+                <p class="forge-typography--heading1 itemsHeader">Video visitation</p>
+                <div style="padding:1rem">
+                    <div class="timerNotice">
+                        <forge-inline-message>
+                            <p>
+                              Time left:
+                            <span class="timerCountdown forge-typography--heading1">30:00</p>
+                          </forge-inline-message>
+                          <forge-inline-message theme="error">
+                            <p>
+                                Notice: All video visit sessions may be monitored and recorded
+                            </p>
+                          </forge-inline-message>
+                    </div>
+                    <div class="videoControls">
+                        <video width="70%" height="auto" autoplay loop muted>
+                            <source src="/media/visitor.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                          </video>
+                          <div class="miniVideoControls">
+                            <video width="100%" height="auto" autoplay loop muted>
+                                <source src="/media/inmate.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                              </video>
+                              <p class="forge-typography--heading2" style="margin-top:1rem; margin-bottom:0;">Volume</p>
+                              <forge-slider data-aria-label="Value"></forge-slider>
+                              <forge-button variant="outlined" full-width>Can't hear?</forge-button>
+                              <forge-button variant="filled" full-width	 theme="error"><a href="/index.html">End video</a></forge-button>
+                          </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- <div slot="body-right" class="scrollUpDown">
+            <forge-card class="scrollUp">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_up"
+                            aria-label="A heart graphic" style="margin-bottom:0.5rem;"></forge-icon>
+                        <p class="forge-typography--heading1 noMargin">Scroll up</p>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+            <forge-card class="scrollDown">
+                <forge-button-area>
+                    <button slot="button" aria-labelledby="button-heading"></button>
+                    <div class="scrollContent">
+                        <p class="forge-typography--heading1 noMargin">Scroll down</p>
+                        <forge-icon external external-type="extended" slot="start" role="img" name="arrow_down"
+                            aria-label="A heart graphic" style="margin-top:0.5rem;"></forge-icon>
+                    </div>
+                </forge-button-area>
+            </forge-card>
+        </div> -->
+    </forge-scaffold>
+
+
+    <script src="scripts.js"></script>
+
+    <script>// Timer functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set the duration (30 minutes in seconds)
+            const timerDuration = 30 * 60; // 30 minutes in seconds
+            let timeRemaining = timerDuration;
+            
+            // Get the timer element
+            const timerElement = document.querySelector('.timerCountdown');
+            
+            // Function to format time as MM:SS
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            }
+            
+            // Function to update the timer display
+            function updateTimer() {
+                if (timeRemaining <= 0) {
+                    // Timer has expired
+                    timerElement.textContent = '0:00';
+                    clearInterval(timerInterval);
+                    
+                    // Optional: Add actions when timer expires
+                    alert('Video session has ended.');
+                    
+                } else {
+                    // Update the display
+                    timerElement.textContent = formatTime(timeRemaining);
+                    timeRemaining--;
+                }
+            }
+            
+            // Initialize the timer display
+            updateTimer();
+            
+            // Start the countdown (update every second)
+            const timerInterval = setInterval(updateTimer, 1000);
+        });</script>
+
+
+    <script>
+        // Force service worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
